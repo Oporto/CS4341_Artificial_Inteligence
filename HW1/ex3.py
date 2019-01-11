@@ -7,11 +7,11 @@ def wordset(fname):
     wset = set()
     
     with open(fname) as file:
-        for line in file:
-            cleanline = regex.sub(' ', line)
-            cleanline = cleanline.lower()
-            splitline = cleanline.split()
-            for w in splitline:
+        for line in file: #Loops through file lines
+            cleanline = regex.sub(' ', line) #Substitutes any non-alphabetic character to an empty space
+            cleanline = cleanline.lower() #lowers characters
+            splitline = cleanline.split() #Splits it into list
+            for w in splitline: #Adds every word in that line to set (Which only adds elements not already present in it)
                 wset.add(w)
     return wset;
         
