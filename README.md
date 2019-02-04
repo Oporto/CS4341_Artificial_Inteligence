@@ -36,7 +36,7 @@ ex3.py - (**Jaccard Index**): Wrote a program that calculates the Jaccard Index 
           # Jaccard  index  between  alice_ascii.txt (Alice in Wonderland) and  glass_ascii.txt (Through the looking glass)
           # 0.4730329208498716
 # Connect-N_AI:
-The aim of this project is to make an AI for the game ConnectN, which is a more general version of Connect-4. If you don’t know Connect-4, try it out here: https://www.gimu.org/connect-four-js/jQuery/alphabeta/index.html. This was done using a Mini-Max Alpha-Beta algorithm that explores board states up to a certain pre-determined depth and uses a heuristic function to evaluate the leaf nodes of the search. At the end of the assignment, the Alpha-Beta-Agent class of each student was instantiated for a class tournament, with a time limit of 15 seconds per turn. The developed code is in alpha_beta_agent.py, while the game and tournament programs were provided by the Professor.
+The aim of this project is to make an AI for the game ConnectN, which is a more general version of Connect-4. If you don’t know Connect-4, try it out here: https://www.gimu.org/connect-four-js/jQuery/alphabeta/index.html. The AI for this assignment was done using a Mini-Max Alpha-Beta algorithm that explores board states up to a certain pre-determined depth and uses a heuristic function to evaluate the leaf nodes of the search. At the end of the assignment, the Alpha-Beta-Agent class of each student was instantiated for a class tournament, with a time limit of 15 seconds per turn. The developed code is in alpha_beta_agent.py, while the game and tournament programs were provided by the Professor.
 
 **Board State Heuristic**
 
