@@ -305,7 +305,17 @@ class TestCharacter(CharacterEntity):
         path = self.astar(wrld, start, goal)
         move = self.getMove(path, wrld)
 
-        self.move(move[0], move[1])
-
-
-
+        if move in safe_moves:
+            self.move(move[0], move[1])
+            print("a star!")
+        else:
+            print("run away!")
+            for safem in safe_moves:
+                print(safe_moves)
+                if wrld.wall_at(me.x + safem[0], me.y + safem[1]) or wrld.monsters_at(me.x + safem[0], me.y + safem[1]):
+                    continue
+                else:
+                    self.move(safem[0], safem[1])
+                    print("an else and scared")
+                    print(safem)
+                    break
