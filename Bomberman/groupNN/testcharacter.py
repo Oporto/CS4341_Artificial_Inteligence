@@ -219,7 +219,9 @@ class TestCharacter(CharacterEntity):
                     came_from[(node.x, node.y)] = current
                 i+=1
 
-        return came_from, cost_so_far
+        path = came_from, cost_so_far
+        newpath = self.make_sense_of_path(path, start, goal)
+        return newpath
 
     # returns the path from goal node to start node
     def make_sense_of_path(self, path, start, goal):
@@ -292,8 +294,7 @@ class TestCharacter(CharacterEntity):
         goal = self.find_exit(wrld)
         safe_moves = self.get_safe_moves(wrld, surroundings, me.x, me.y)
 
-        oldPath = self.astar(wrld, start, goal)
-        path = self.make_sense_of_path(oldPath, start, goal)
+        path = self.astar(wrld, start, goal)
         move = self.getMove(path, wrld)
 
         self.move(move[0], move[1])
