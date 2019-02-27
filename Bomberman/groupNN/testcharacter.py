@@ -103,19 +103,18 @@ class TestCharacter(CharacterEntity):
                                 finds[0] = ls
                             elif (wrld.exit_at(x,y)):
                                 ls = finds[1]
-<<<<<<< HEAD
+
                                 ls.append((dx,dy))
                                 finds[1] = ls
                             elif (wrld.wall_at(x,y)):
                                 ls = finds[2]
                                 ls.append((dx,dy))
-=======
+
                                 ls.append((dx, dy))
                                 finds[1] = ls
                             elif (wrld.wall_at(x,y)):
                                 ls = finds[2]
                                 ls.append((dx, dy))
->>>>>>> 82586e4417a6de022dca3ab6c1022d4a6ad2b845
                                 finds[2] = ls
                             elif (wrld.bomb_at(x,y)):
                                 ls = finds[3]
