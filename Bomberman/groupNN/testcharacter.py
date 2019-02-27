@@ -56,7 +56,7 @@ class TestCharacter(CharacterEntity):
                                 finds[6] = ls
         return finds;
     def get_safe_moves(wrld, surroundings, me):
-        safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]
+        safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if me.x + dx in range(0,wrld.width) and me.y in range(0,wrld.height)]
         #Bomb, monster, explosion and character check
         for dir in surroundings[3]:
             safe.remove(dir)
@@ -104,5 +104,6 @@ class TestCharacter(CharacterEntity):
             self.move(surroundings[1][0])
             pass
         safe_moves = self.get_safe_moves(wlrd, surroundings, me.x, me.y)
-        
+        move_x, move_y = next(itr(safe_moves))
+        self.move(move_x, move_y)
         pass
