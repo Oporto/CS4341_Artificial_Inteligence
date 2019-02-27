@@ -103,6 +103,13 @@ class TestCharacter(CharacterEntity):
                                 finds[0] = ls
                             elif (wrld.exit_at(x,y)):
                                 ls = finds[1]
+
+                                ls.append((dx,dy))
+                                finds[1] = ls
+                            elif (wrld.wall_at(x,y)):
+                                ls = finds[2]
+                                ls.append((dx,dy))
+
                                 ls.append((dx, dy))
                                 finds[1] = ls
                             elif (wrld.wall_at(x,y)):
@@ -252,6 +259,8 @@ class TestCharacter(CharacterEntity):
                 if me.x + dx in range(0, ww) and me.y in range(0, wh):
                     safe.append((dx, dy))
         #Bomb, monster, explosion and character check
+        if wrld.bomb_at(me.x, me.y):
+            safe.remove((0,0))
         for dir in surroundings[3]:
             safe.remove(dir)
         for dir in surroundings[4]:
@@ -286,7 +295,7 @@ class TestCharacter(CharacterEntity):
                         if check_y > 0 and check_y < wrld.height() and check_y != me.y:
                             if wrld.monsters_at(check_x, check_y):
                                 safe.remove((dx,dy))
-        return safe;
+        return safe
         
 
     def do(self, wrld):
