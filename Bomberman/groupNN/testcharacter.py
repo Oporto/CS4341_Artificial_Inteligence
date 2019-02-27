@@ -20,6 +20,7 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.queue)[1]
 
+# Node class for A* to keep track of score
 class Node:
     def __init__(self, x, y, score):
         self.x = x
@@ -28,9 +29,11 @@ class Node:
 
 class TestCharacter(CharacterEntity):
 
+    # the location of the character TODO update each iteration
     currentLoc = (0, 0)
 
 
+    # constructs a grid that is equivalent to the current world state
     def constructGrid(self, wrld):
         i = 0
         j = 0
@@ -59,6 +62,7 @@ class TestCharacter(CharacterEntity):
             i+=1
         return grid
 
+    # prints out the given grid
     def printGrid(self, wrld, grid):
         i = 0
         j = 0
@@ -112,9 +116,7 @@ class TestCharacter(CharacterEntity):
                             count += 1
         return finds
 
-    # checks for type of cell in surrounding, giving the list direction tuples as a return
-    # type 1 is exit
-    # type 2 is monster
+    # returns nodes surrounding the current position of the character
     def get_neighbors(self, wrld, thisx, thisy):
         # First check if exit is 1 move away\
         finds = [0]*4
