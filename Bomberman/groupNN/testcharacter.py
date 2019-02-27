@@ -299,7 +299,7 @@ class TestCharacter(CharacterEntity):
                         if check_y > 0 and check_y < wrld.height() and check_y != me.y:
                             if wrld.monsters_at(check_x, check_y):
                                 safe.remove((dx,dy))
-        return safe;
+        return safe
         
 
     def do(self, wrld):
