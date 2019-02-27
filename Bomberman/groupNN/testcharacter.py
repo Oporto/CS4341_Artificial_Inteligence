@@ -234,37 +234,6 @@ class TestCharacter(CharacterEntity):
 
         return newpath
 
-
-
-                            if (wlrd.empty_at(x,y)):
-                                ls = finds[0]
-                                ls.append(dx,dy)
-                                finds[0] = ls
-                            elif (wlrd.exit_at(x,y)):
-                                ls = finds[1]
-                                ls.append(dx,dy)
-                                finds[1] = ls
-                            elif (wlrd.wall_at(x,y)):
-                                ls = finds[2]
-                                ls.append(dx,dy)
-                                finds[2] = ls
-                            elif (wlrd.bomb_at(x,y)):
-                                ls = finds[3]
-                                ls.append(dx,dy)
-                                finds[3] = ls
-                            elif (wlrd.explosion_at(x,y)):
-                                ls = finds[4]
-                                ls.append(dx,dy)
-                                finds[4] = ls
-                            elif (wlrd.monsters_at(x,y)):
-                                ls = finds[5]
-                                ls.append(dx,dy)
-                                finds[5] = ls
-                            elif (wlrd.characters_at(x,y)):
-                                ls = finds[6]
-                                ls.append(dx,dy)
-                                finds[6] = ls
-        return finds;
     def get_safe_moves(wrld, surroundings, me):
         safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if me.x + dx in range(0,wrld.width) and me.y in range(0,wrld.height)]
         #Bomb, monster, explosion and character check
