@@ -231,7 +231,13 @@ class TestCharacter(CharacterEntity):
             current = path[0][current]
 
         return newpath
+    def getMove(self, path, wrld):
+        pathLength = len(path) - 1
+        nextMove = path[pathLength]
 
+        newMove = nextMove[0] - wrld.me(self).x, nextMove[1] - wrld.me(self).y
+
+        return newMove
     def get_safe_moves(wrld, surroundings, me):
         safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if me.x + dx in range(0,wrld.width) and me.y in range(0,wrld.height)]
         #Bomb, monster, explosion and character check
@@ -277,20 +283,20 @@ class TestCharacter(CharacterEntity):
         
         me = wrld.me(self)
 
+
         surroundings = self.check_surroundings(wrld, me.x, me.y)
-        # First check if exit is 1 move away
+         #First check if exit is 1 move away
         if len(surroundings[1]) > 0:
             self.move(surroundings[1][0])
-            pass
         start = me.x, me.y
         goal = self.find_exit(wrld)
         safe_moves = self.get_safe_moves(wrld, surroundings, me.x, me.y)
+
         oldPath = self.astar(wrld, start, goal)
         path = self.make_sense_of_path(oldPath, start, goal)
-        
-        move_x, move_y = next(itr(safe_moves))
-        self.move(move_x, move_y)
-        pass
+        move = self.getMove(path, wrld)
+
+        self.move(move[0], move[1])
 
 
 
