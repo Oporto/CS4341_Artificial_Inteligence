@@ -119,7 +119,7 @@ class TestCharacter(CharacterEntity):
     # returns nodes surrounding the current position of the character
     def get_neighbors(self, wrld, thisx, thisy):
         # First check if exit is 1 move away\
-        finds = [0]*4
+        finds = [Node(-1, -1, -1)]*8
         count = 0
 
         for dx in [-1, 0, 1]:
@@ -135,9 +135,9 @@ class TestCharacter(CharacterEntity):
                         if (y >= 0) and (y < wrld.height()):
                             # Check cases
                             if dx == 1 and dy == 1 :
-                                print("nah")
+                                continue
                             elif dx == -1 and dy == -1 :
-                                print("nah")
+                                continue
                             elif wrld.empty_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             elif wrld.exit_at(x, y):
@@ -178,33 +178,50 @@ class TestCharacter(CharacterEntity):
     # A* implementation
     def astar(self, wrld, start, goal):
         frontier = PriorityQueue()
-        frontier.put(Node(wrld.me(self).x, wrld.me(self).y, 0), 0)
+        frontier.put(start, 0)
+
         came_from = {}
         cost_so_far = {}
         came_from[start] = None
         cost_so_far[start] = 0
-        grid = self.constructGrid(wrld)
 
         while not frontier.empty():
             current = frontier.get()
 
+            if current[0] == -1 or current[1] == -1:
+                continue
+
             if current == goal:
                 break
 
-            # just finished making the check surroundings2, now time to change this part to the new method and make it work
+            # just finished making the check get_neighbors, now time to change this part to the new method and make it work
             i = 0
-            neighbors = self.get_neighbors(wrld, wrld.me(self).x, wrld.me(self).y)
+            neighbors = self.get_neighbors(wrld, current[0], current[1])
 
-            while i < len(neighbors):
-                new_cost = cost_so_far[current] + 1
-                if neighbors[i] not in cost_so_far or new_cost < cost_so_far[neighbors[i].cost]:
-                    cost_so_far[neighbors[i]] = new_cost
-                    priority = new_cost + self.heuristic(goal, neighbors[i])
-                    frontier.put(next, priority)
-                    came_from[next] = current
+            for node in neighbors:
+                new_cost = cost_so_far[current] + node.score
+                if node.x == -1 or node.y == -1:
+                    continue
+                if (node.x, node.y) not in cost_so_far or new_cost < cost_so_far[(node.x, node.y)]:
+                    cost_so_far[(node.x, node.y)] = new_cost
+                    priority = new_cost + self.heuristic(goal, current)
+                    frontier.put((node.x, node.y), priority)
+                    came_from[(node.x, node.y)] = current
                 i+=1
 
         return came_from, cost_so_far
+
+    # returns the path from goal node to start node
+    def make_sense_of_path(self, path, start, goal):
+        current = path[0][goal]
+        newpath = [goal]
+
+        while current != start:
+            newpath.append(current)
+            current = path[0][current]
+
+        return newpath
+
 
     def do(self, wrld):
         # Your code here
@@ -219,10 +236,10 @@ class TestCharacter(CharacterEntity):
         goal = self.find_exit(wrld)
         newsurroundings = self.get_neighbors(wrld, me.x, me.y)
 
-        grid = self.constructGrid(wrld)
-        self.printGrid(wrld, grid)
-        #path = self.astar(wrld, start, goal)
+        oldPath = self.astar(wrld, start, goal)
+        path = self.make_sense_of_path(oldPath, start, goal)
 
+        print("made it")
         pass
 
 
