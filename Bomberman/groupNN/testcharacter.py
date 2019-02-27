@@ -98,15 +98,15 @@ class TestCharacter(CharacterEntity):
                             #Check cases
                             if (wrld.empty_at(x,y)):
                                 ls = finds[0]
-                                ls.append(dx,dy)
+                                ls.append((dx,dy))
                                 finds[0] = ls
                             elif (wrld.exit_at(x,y)):
                                 ls = finds[1]
-                                ls.append(dx,dy)
+                                ls.append((dx,dy))
                                 finds[1] = ls
                             elif (wrld.wall_at(x,y)):
                                 ls = finds[2]
-                                ls.append(dx,dy)
+                                ls.append((dx,dy))
                                 finds[2] = ls
                             elif (wrld.bomb_at(x,y)):
                                 ls = finds[3]
@@ -238,9 +238,11 @@ class TestCharacter(CharacterEntity):
         newMove = nextMove[0] - wrld.me(self).x, nextMove[1] - wrld.me(self).y
 
         return newMove
-    def get_safe_moves(wrld, surroundings, me):
+    def get_safe_moves(self, wrld, surroundings, me):
         safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if me.x + dx in range(0,wrld.width) and me.y in range(0,wrld.height)]
         #Bomb, monster, explosion and character check
+        if wrld.bomb_at(me.x, me.y):
+            safe.remove((0,0))
         for dir in surroundings[3]:
             safe.remove(dir)
         for dir in surroundings[4]:
@@ -295,7 +297,7 @@ class TestCharacter(CharacterEntity):
         oldPath = self.astar(wrld, start, goal)
         path = self.make_sense_of_path(oldPath, start, goal)
         move = self.getMove(path, wrld)
-
+        
         self.move(move[0], move[1])
 
 
