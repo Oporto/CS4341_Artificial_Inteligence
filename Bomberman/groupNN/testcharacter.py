@@ -1,6 +1,7 @@
 # This is necessary to find the main code
 import sys
 import heapq
+import random
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
@@ -314,10 +315,12 @@ class TestCharacter(CharacterEntity):
         path = self.astar(wrld, start, goal)
         move = self.getMove(path, wrld)
 
-        if move in safe_moves:
+        if move in safe_moves and not wrld.wall_at(me.x + move[0], me.y + move[1]):
             self.move(move[0], move[1])
             print("a star!")
-        else:
+        elif move in safe_moves and (0,0) in safe_moves:
+            self.place_bomb()
+        elif len(safe_moves)>0:
             print("run away!")
             for safem in safe_moves:
                 print(safe_moves)
@@ -328,3 +331,16 @@ class TestCharacter(CharacterEntity):
                     print("an else and scared")
                     print(safem)
                     break
+        else:
+            risky_moves = set()
+            for dir in surroundings[0]:
+                part_x = me.x + dir[0]
+                part_y = me.x + dir[1]
+                next_surroundings = self.check_surroundings(wrld, part_x,part_y)
+                if len(next_surroundings[5]) == 0:
+                    risky_moves.add(dir)
+            if len(risky_moves) > 0:
+                (riskyx, riskyy) = random.choice(risky_moves)
+                self.move(riskyx, riskyy)
+            (last_resortx, last_resorty) = random.choice(surroundings[0])
+            self.move(last_resortx, last_resorty)
