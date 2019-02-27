@@ -55,25 +55,43 @@ class TestCharacter(CharacterEntity):
                                 ls.append(dx,dy)
                                 finds[6] = ls
         return finds;
-    def get_safe_moves(surroundings):
-        not_safe = set()
-        #Bomb, explosion and character check
-        for dir in surroundings[3] or in surroundings[3] or in surroundings[6]:
-            not_safe.add(dir)
-        #monster check
+    def get_safe_moves(wrld, surroundings, me):
+        safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]
+        #Bomb, monster, explosion and character check
+        for dir in surroundings[3]:
+            safe.remove(dir)
+        for dir in surroundings[4]:
+            safe.remove(dir)
         for dir in surroundings[5]:
-            
-            if dir[0]*dir[1] == 0:
-                
-                if dir[0] == 0:
-                    lst = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if dy != -dir[1]]
-                elif dir[1] == 0:
-                    lst = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if dx != -dir[0]]
-                
-            else:
-                lst = [(0,0), (dir[0],0), (0,dir[1])]
-            not_safe.update(lst)
-        safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if (dx,dy) not in not_safe]
+            safe.remove(dir)
+        for dir in surroundings[6]:
+            safe.remove(dir)
+        #Check for bomb range
+        bomb_range = wrld.expl_range
+        for (dx,dy) in safe:
+            #x direction
+            for i in range(-bomb_range, bomb_range+1):
+                if i != 0 and me.x + i in range(0,wlrd.width) and wrld.bomb_at(me.x + i, me.y):
+                    safe.remove((dx,dy))
+                    break;
+        for (dx,dy) in safe:
+            #y direction
+            for j in range(-bomb_range, bomb_range+1):
+                if j != 0 and me.y + j in range(0,wlrd.height) and wrld.bomb_at(me.x , me.y + j):
+                    safe.remove((dx,dy))
+                    break;
+        
+        #Check cells near monster
+        monst_range = 2
+        for (dx,dy) in safe:
+            for i in range(-monst_range, monst_range+1):
+                for j in range(-monst_range, monst_range+1):
+                    check_x = me.x+dx+i
+                    check_y = me.y+dy+j
+                    if check_x > 0 and check_x < wlrd.width and check_x != me.x:
+                        if check_y > 0 and check_y < wlrd.height and check_y != me.y:
+                            if wlrd.monster_at(check_x, check_y):  
+                                safe.remove((dx,dy))
         return safe;
         
     def do(self, wrld):
@@ -83,8 +101,8 @@ class TestCharacter(CharacterEntity):
         surroundings = self.check_surroundings(wlrd, me.x, me.y)
         # First check if exit is 1 move away
         if len(surroundings[1]) > 0:
-            self.move(surroundings[1])
+            self.move(surroundings[1][0])
             pass
-        safe_moves = self.get_safe_moves(surroundings)
+        safe_moves = self.get_safe_moves(wlrd, surroundings, me.x, me.y)
         
         pass
