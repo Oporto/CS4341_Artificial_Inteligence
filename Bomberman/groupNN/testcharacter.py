@@ -80,7 +80,7 @@ class TestCharacter(CharacterEntity):
     # type 2 is monster
     #checks for type of cell in surrounding 
     #checks for type of cell in surrounding 
-    def check_surroundings(self, wrld, thisx, thisy):
+    '''def check_surroundings(self, wrld, thisx, thisy):
         # First check if exit is 1 move away\
         finds = dict([(i,[]) for i in range(7)])
         
@@ -126,7 +126,7 @@ class TestCharacter(CharacterEntity):
                                 ls = finds[6]
                                 ls.append(dx,dy)
                                 finds[6] = ls
-        return finds;
+        return finds;'''
 
     # returns nodes surrounding the current position of the character
     def get_neighbors(self, wrld, thisx, thisy):
@@ -233,7 +233,13 @@ class TestCharacter(CharacterEntity):
             current = path[0][current]
 
         return newpath
+    def getMove(self, path, wrld):
+        pathLength = len(path) - 1
+        nextMove = path[pathLength]
 
+        newMove = nextMove[0] - wrld.me(self).x, nextMove[1] - wrld.me(self).y
+
+        return newMove
     def get_safe_moves(wrld, surroundings, me):
         safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if me.x + dx in range(0,wrld.width) and me.y in range(0,wrld.height)]
         #Bomb, monster, explosion and character check
@@ -250,13 +256,13 @@ class TestCharacter(CharacterEntity):
         for (dx,dy) in safe:
             #x direction
             for i in range(-bomb_range, bomb_range+1):
-                if i != 0 and me.x + i in range(0,wlrd.width) and wrld.bomb_at(me.x + i, me.y):
+                if i != 0 and me.x + i in range(0,wrld.width) and wrld.bomb_at(me.x + i, me.y):
                     safe.remove((dx,dy))
                     break;
         for (dx,dy) in safe:
             #y direction
             for j in range(-bomb_range, bomb_range+1):
-                if j != 0 and me.y + j in range(0,wlrd.height) and wrld.bomb_at(me.x , me.y + j):
+                if j != 0 and me.y + j in range(0,wrld.height) and wrld.bomb_at(me.x , me.y + j):
                     safe.remove((dx,dy))
                     break;
         
@@ -267,9 +273,9 @@ class TestCharacter(CharacterEntity):
                 for j in range(-monst_range, monst_range+1):
                     check_x = me.x+dx+i
                     check_y = me.y+dy+j
-                    if check_x > 0 and check_x < wlrd.width and check_x != me.x:
-                        if check_y > 0 and check_y < wlrd.height and check_y != me.y:
-                            if wlrd.monster_at(check_x, check_y):  
+                    if check_x > 0 and check_x < wrld.width and check_x != me.x:
+                        if check_y > 0 and check_y < wrld.height and check_y != me.y:
+                            if wrld.monster_at(check_x, check_y):  
                                 safe.remove((dx,dy))
         return safe;
         
@@ -279,20 +285,20 @@ class TestCharacter(CharacterEntity):
         
         me = wrld.me(self)
 
-        surroundings = self.check_surroundings(wlrd, me.x, me.y)
+        #surroundings = self.check_surroundings(wrld, me.x, me.y)
         # First check if exit is 1 move away
-        if len(surroundings[1]) > 0:
-            self.move(surroundings[1][0])
-            pass
+        #if len(surroundings[1]) > 0:
+        #    self.move(surroundings[1][0])
+        #    pass
         start = me.x, me.y
         goal = self.find_exit(wrld)
-        safe_moves = self.get_safe_moves(wlrd, surroundings, me.x, me.y)
+        #safe_moves = self.get_safe_moves(wrld, surroundings, me.x, me.y)
         oldPath = self.astar(wrld, start, goal)
         path = self.make_sense_of_path(oldPath, start, goal)
-        
-        move_x, move_y = next(itr(safe_moves))
-        self.move(move_x, move_y)
-        pass
+        move = self.getMove(path, wrld)
+
+        #move_x, move_y = next(itr(safe_moves))
+        self.move(move[0], move[1])
 
 
 
