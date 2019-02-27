@@ -233,7 +233,6 @@ class TestCharacter(CharacterEntity):
             current = path[0][current]
 
         return newpath
-
     def getMove(self, path, wrld):
         pathLength = len(path) - 1
         nextMove = path[pathLength]
@@ -241,7 +240,6 @@ class TestCharacter(CharacterEntity):
         newMove = nextMove[0] - wrld.me(self).x, nextMove[1] - wrld.me(self).y
 
         return newMove
-
     def get_safe_moves(wrld, surroundings, me):
         safe = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1] if me.x + dx in range(0,wrld.width) and me.y in range(0,wrld.height)]
         #Bomb, monster, explosion and character check
