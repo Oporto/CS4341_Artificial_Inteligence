@@ -32,6 +32,7 @@ class TestCharacter(CharacterEntity):
 
     discount = 0.9
     lrate = 0.2
+    followed_q = False
 
 # constructs a grid that is equivalent to the current world state
     def constructGrid(self, wrld):
