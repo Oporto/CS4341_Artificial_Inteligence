@@ -387,7 +387,7 @@ class TestCharacter(CharacterEntity):
         if closestMonster == 0:
             return 0
 
-        return 1/ (1+closestMonster)
+        return 1/(1+closestMonster)
 
     # returning reasonable numbers
     # returns distance to exit normalized between 0.0 and 1.0
@@ -483,16 +483,17 @@ class TestCharacter(CharacterEntity):
                 
 
     def qLearn(self, wrld, x, y):
-        possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+        possibleMoves = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]
         currentQValue = self.calc_qvalue(wrld, x, y)
         newQValue = 0
         bestQValue = -100
         bestQMove = (0,0)
-
+        qvalues = dict()
         # iterate until goal is reached to evaluate entire state
         for m in possibleMoves:
             # for each move, calculate the value of the state
             newQValue = self.calc_state(wrld, x+m[0], y+m[1])
+            qvalues[m] = newQValue
             if newQValue > bestQValue:
                 if not wrld.wall_at(x+m[0], y+m[1]):
                     bestQValue = newQValue
@@ -500,7 +501,7 @@ class TestCharacter(CharacterEntity):
 
         difference = self.calc_difference(currentQValue, bestQValue)
         self.calc_weights(wrld, x + bestQMove[0], x + bestQMove[1], difference)
-        return bestQMove
+        return bestQMove, qvalues
 
 
     def do(self, wrld):
@@ -524,6 +525,9 @@ class TestCharacter(CharacterEntity):
         move = self.getMove(path, wrld)
         #if self.monsterNear(wrld, me.x, me.y):
         #move = self.qLearn(wrld, me.x, me.y)
+        if wrld.wall_at(x + move[0], y + move[1]):
+            self.place_bomb()
+        
         self.move(move[0], move[1])
 
         print("Move: ", move[0], move[1])
