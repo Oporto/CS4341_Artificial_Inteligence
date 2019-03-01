@@ -470,13 +470,13 @@ class TestCharacter(CharacterEntity):
                     
     def ft_isInBombRange(self, wrld, x,y):
         range = wrld.expl_range()
-        for i in range(0, wrld.width):
-            for j in range(0, wrld.height):
+        for i in range(0, wrld.width()):
+            for j in range(0, wrld.height()):
                 if wrld.bomb_at(i,j):
-                    if i = x:
+                    if i == x:
                         if abs(j - y) <= range:
                             return 1
-                    elif j = y:
+                    elif j == y:
                         if abs(i - x) <= range:
                             return 1
         return 0
