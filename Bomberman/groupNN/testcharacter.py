@@ -32,6 +32,10 @@ class TestCharacter(CharacterEntity):
 
     discount = 0.9
     lrate = 0.2
+    lastQValue = 0
+    lastft1 = 0
+    lastft2 = 0
+    lastft3 = 0
 
     f = open("weights.txt")
     weights = f.read().splitlines()
@@ -177,9 +181,8 @@ class TestCharacter(CharacterEntity):
                                 if dist <= 4:
                                     print("DANGER", dist)
                                     danger = True
-
                             if danger:
-                                finds[count] = (Node(x, y, 100))
+                                finds[count] = (Node(x, y, 50))
                             elif wrld.empty_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             elif wrld.exit_at(x, y):
@@ -407,7 +410,7 @@ class TestCharacter(CharacterEntity):
             return 0
 
     def calc_reward(self, wrld, x, y):
-        if wrld.monsters_at(x, y):
+        if wrld.explosion_at(x, y):
             print("LOST!!!!!!")
             return -1000
         elif wrld.exit_at(x, y):
@@ -415,11 +418,24 @@ class TestCharacter(CharacterEntity):
             return 1000
         elif wrld.explosion_at(x, y):
             return -1000
+        elif wrld.bomb_at(x, y):
+            return -1000
         return -1
 
+    # calculate q value for the given location
     def calc_qvalue(self, wrld, x, y):
-        return self.w1*self.ft_monster_distance(wrld, x, y) + self.w2*self.ft_exit_distance(wrld, x, y) + self.w3*self.ft_trapped(wrld, x, y)
+        ft1 = self.ft_monster_distance(wrld, x, y)
+        ft2 = self.ft_exit_distance(wrld, x, y)
+        ft3 = self.ft_trapped(wrld, x, y)
 
+        # save the values for next iteration to update weights
+        self.lastft1 = ft1
+        self.lastft2 = ft2
+        self.lastft3 = ft3
+
+        return self.w1*ft1 + self.w2*ft2 + self.w3*ft3
+
+    # go through next possible moves and generate a qvalue for each, return the best
     def calc_best_next_state(self, wrld, x, y):
         possibleMoves = [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
         bestQValue = 0
@@ -431,17 +447,16 @@ class TestCharacter(CharacterEntity):
 
         return bestQValue
 
+    # use to calculate actual value
     def calc_state(self, wrld, x, y):
         return self.calc_reward(wrld, x, y) + self.discount * self.calc_best_next_state(wrld, x, y)
 
+    # calculate the difference between q1 and q2
     def calc_difference(self, q1, q2):
         return q1-q2
 
-    def calc_weights(self, wrld, x, y, difference):
-        ft1 = self.ft_monster_distance(wrld, x, y)
-        ft2 = self.ft_exit_distance(wrld, x, y)
-        ft3 = self.ft_trapped(wrld, x, y)
-
+    # calculate the new weights
+    def calc_weights(self, difference, ft1, ft2, ft3):
         print("FT1, FT2, FT3", ft1, ft2, ft3)
 
         # wi = wi + learning rate * difference * calculated value
@@ -450,9 +465,8 @@ class TestCharacter(CharacterEntity):
         self.w3 = self.w3 + self.lrate * difference * ft3
         print("w1, w2, w3: ", self.w1, self.w2, self.w3)
 
+    # if there is a monster within the given range
     def monsterNear(self, wrld, x, y):
-
-
         for r in range (-4,4):
             for c in range (-4,4):
                 if r + x < wrld.width():
@@ -461,31 +475,64 @@ class TestCharacter(CharacterEntity):
                             return True
         return False
 
+    # main qlearning function
     def qLearn(self, wrld, x, y):
-        possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
-        currentQValue = self.calc_qvalue(wrld, x, y)
-        newQValue = 0
+        possibleMoves = [(0,0), (0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
         bestQValue = -100
         bestQMove = (0,0)
+        monsterPos = self.find_monsters(wrld)
 
-        # iterate until goal is reached to evaluate entire state
-        for m in possibleMoves:
-            # for each move, calculate the value of the state
-            newQValue = self.calc_state(wrld, x+m[0], y+m[1])
-            if newQValue > bestQValue:
-                if not wrld.wall_at(x+m[0], y+m[1]):
-                    bestQValue = newQValue
-                    bestQMove = m[0], m[1]
+        # iterate through all possible moves for character and monster
+        for char in possibleMoves:
+            currCharPos = x + char[0], y + char[1]
+            if wrld.wall_at(currCharPos[0], currCharPos[1]):
+                continue
+            # add move to be checked
+            wrld.me(self).move(char[0], char[1])
 
-        difference = self.calc_difference(currentQValue, bestQValue)
-        self.calc_weights(wrld, x + bestQMove[0], x + bestQMove[1], difference)
+            #go through all the possible monster positions
+            i = 0
+            for pos in monsterPos:
+                for monster in possibleMoves:
+
+                    # check if the move is a wall, ignore if so
+                    currMonsPos = pos[0] + monster[0], pos[1] + monster[1]
+                    if wrld.wall_at(currMonsPos):
+                        continue
+                    # add monster move to be checked
+                    currMonster = wrld.monsters_at(pos[0], pos[1])
+                    currMonster[i].move(monster[0], monster[1])
+
+                    # generate new world given current state
+                    wrld2, events = wrld.next()
+
+                    # calculate the q value of the new state
+                    newQValue = self.calc_qvalue(wrld2, wrld2.me(self).x, wrld2.me(self).y)
+
+                    # if this is the best qvalue for a state found so far, save it
+                    if newQValue > bestQValue:
+                        bestQValue = newQValue
+                        bestQMove = char
+                i += 1
+
+        # save the best qValue as it will be used to calculate weights in next iteration
+        self.lastQValue = bestQValue
+
+        # return best possible move
         return bestQMove
 
 
     def do(self, wrld):
-        # Your code here
-        
         me = wrld.me(self)
+
+        # if we want to update weights
+        if self.lastQValue != 0:
+            reward = self.calc_reward(wrld, me.x, me.y)
+            actualQValue = reward + self.discount * self.calc_best_next_state(wrld, me.x, me.y)
+            difference = self.calc_difference(actualQValue, self.lastQValue)
+            self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
+            print("NEW WEIGHTS CALCULATED AT START OF ITERATION")
+
         currentQValue = 0
         newQValue = 0
         bestQValue = 0
@@ -499,16 +546,16 @@ class TestCharacter(CharacterEntity):
         goal = self.find_exit(wrld)
         safe_moves = self.get_safe_moves(wrld, surroundings, me)
 
-        path = self.astar(wrld, start, goal)
-        move = self.getMove(path, wrld)
+        #path = self.astar(wrld, start, goal)
+        #move = self.getMove(path, wrld)
 
         #if self.monsterNear(wrld, me.x, me.y):
-        #move = self.qLearn(wrld, me.x, me.y)
+        move = self.qLearn(wrld, me.x, me.y)
         self.move(move[0], move[1])
 
-        print("Move: ", move[0], move[1])
-        print("Exit value: ", self.ft_exit_distance(wrld, 0, 1))
-        print("Monster value: ", self.ft_monster_distance(wrld, 0, 0))
+        #print("Move: ", move[0], move[1])
+        #print("Exit value: ", self.ft_exit_distance(wrld, 0, 1))
+        #print("Monster value: ", self.ft_monster_distance(wrld, 0, 0))
 
         pos = self.find_monsters(wrld)
         for i in pos:
@@ -530,3 +577,17 @@ class TestCharacter(CharacterEntity):
         f.close()
       #  else:
        #     self.move(move[0], move[1])
+
+    # if the game is ended either by death or winning
+    def done(self, wrld):
+        me = wrld.me(self)
+        reward = self.calc_reward(wrld, me.x, me.y)
+        actualQValue = reward + self.discount * self.calc_best_next_state(wrld, me.x, me.y)
+        difference = self.calc_difference(actualQValue, self.lastQValue)
+        self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
+
+        print("NEW WEIGHTS CALCULATED AT END OF GAME")
+
+
+
+
