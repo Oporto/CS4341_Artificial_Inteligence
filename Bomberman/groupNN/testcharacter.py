@@ -482,7 +482,7 @@ class TestCharacter(CharacterEntity):
         return 0
                 
 
-    def qLearn(self, wrld, x, y):
+    def qLearn(self, wrld, x, y,astar_move):
         possibleMoves = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]
         currentQValue = self.calc_qvalue(wrld, x, y)
         newQValue = 0
@@ -522,11 +522,23 @@ class TestCharacter(CharacterEntity):
         safe_moves = self.get_safe_moves(wrld, surroundings, me)
 
         path = self.astar(wrld, start, goal)
-        move = self.getMove(path, wrld)
-        #if self.monsterNear(wrld, me.x, me.y):
-        #move, all_moves = self.qLearn(wrld, me.x, me.y)
+        astar_move = self.getMove(path, wrld)
+        
+        move, all_moves = self.qLearn(wrld, me.x, me.y, astar_move)
         if wrld.wall_at(x + move[0], y + move[1]):
-            self.place_bomb()
+            threshold = 0
+            stay_score = all_moves[(0,0)]
+            if stay_score > threshold:
+                self.place_bomb()
+            else:
+                sec_best = (0,0)
+                best_score = stay_score
+                for mv in [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]:
+                    next_score = all_moves[mv]
+                    if next_score > best_score and not wrld.wall_at(x + mv[0], y + mv[1]):
+                        best_score = next_score
+                        sec_best = move
+                move = sec_best
         
         self.move(move[0], move[1])
 
