@@ -126,14 +126,7 @@ class TestCharacter(CharacterEntity):
                                 finds[0] = ls
                             elif (wrld.exit_at(x,y)):
                                 ls = finds[1]
-
                                 ls.append((dx,dy))
-                                finds[1] = ls
-                            elif (wrld.wall_at(x,y)):
-                                ls = finds[2]
-                                ls.append((dx,dy))
-
-                                ls.append((dx, dy))
                                 finds[1] = ls
                             elif (wrld.wall_at(x,y)):
                                 ls = finds[2]
@@ -155,7 +148,7 @@ class TestCharacter(CharacterEntity):
                                 ls = finds[6]
                                 ls.append((dx, dy))
                                 finds[6] = ls
-        return finds;
+        return finds
 
     # returns nodes surrounding the current position of the character
     def get_neighbors(self, wrld, thisx, thisy):
