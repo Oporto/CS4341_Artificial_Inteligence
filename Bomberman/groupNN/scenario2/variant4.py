@@ -15,14 +15,14 @@ from testcharacter import TestCharacter
 # Create the game
 random.seed(123) # TODO Change this if you want different random choices
 g = Game.fromfile('map.txt')
-g.add_monster(SelfPreservingMonster("aggressive", # name
+g.add_monster(SelfPreservingMonster2("aggressive", # name
                                     "A",          # avatar
                                     3, 13,        # position
                                     2             # detection range
 ))
 
 # TODO Add your character
-g.add_character(TestCharacter("me", # name
+g.add_character(TestCharacter2("me", # name
                               "C",  # avatar
                               0, 0  # position
 ))
