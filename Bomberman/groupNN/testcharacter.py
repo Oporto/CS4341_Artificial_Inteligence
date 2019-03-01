@@ -524,7 +524,7 @@ class TestCharacter(CharacterEntity):
         path = self.astar(wrld, start, goal)
         move = self.getMove(path, wrld)
         #if self.monsterNear(wrld, me.x, me.y):
-        #move = self.qLearn(wrld, me.x, me.y)
+        #move, all_moves = self.qLearn(wrld, me.x, me.y)
         if wrld.wall_at(x + move[0], y + move[1]):
             self.place_bomb()
         
