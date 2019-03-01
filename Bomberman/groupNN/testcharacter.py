@@ -36,6 +36,8 @@ class TestCharacter(CharacterEntity):
     lastft1 = 0
     lastft2 = 0
     lastft3 = 0
+    lastx = 0
+    lasty = 0
 
     f = open("weights.txt")
     weights = f.read().splitlines()
@@ -174,31 +176,31 @@ class TestCharacter(CharacterEntity):
                     if (dx != 0) or (dy != 0):
                         # Avoid out-of-bound indexing
                         if (y >= 0) and (y < wrld.height()):
-                            for pos in monsterLoc:
-                                coord = pos[0], pos[1]
-                                currentcoord = wrld.me(self).x, wrld.me(self).y
-                                dist = abs(self.manhattan_distance(coord, currentcoord))
-                                if dist <= 4:
-                                    print("DANGER", dist)
-                                    danger = True
-                            if danger:
-                                finds[count] = (Node(x, y, 50))
-                            elif wrld.empty_at(x, y):
+                            #for pos in monsterLoc:
+                                #coord = pos[0], pos[1]
+                                #currentcoord = wrld.me(self).x, wrld.me(self).y
+                                #dist = abs(self.manhattan_distance(coord, currentcoord))
+                                #if dist <= 4:
+                                #    print("DANGER", dist)
+                                #    danger = True
+                            #if danger:
+                             #   finds[count] = (Node(x, y, 50))
+                            if wrld.empty_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             elif wrld.exit_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             elif wrld.wall_at(x, y):
                                 finds[count] = (Node(x, y, 100))
                             elif wrld.bomb_at(x, y):
-                                finds[count] = (Node(x, y, 10))
+                                finds[count] = (Node(x, y, 1))
                             elif wrld.explosion_at(x, y):
-                                finds[count] = (Node(x, y, 10))
+                                finds[count] = (Node(x, y, 1))
                             elif wrld.monsters_at(x, y):
-                                finds[count] = (Node(x, y, 100))
+                                finds[count] = (Node(x, y, 1))
                             elif wrld.characters_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             count += 1
-                            danger = False
+                            #danger = False
         return finds
 
     # Manhattan distance
@@ -379,25 +381,40 @@ class TestCharacter(CharacterEntity):
 
     # returns the distance to the nearest monster normalized between 0.0 and 1.0
     def ft_monster_distance(self, wrld, x, y):
-        closestMonster = -1
-        i = 0
-        monsters = self.find_monsters(wrld)
-        for pos in monsters:
-            current = abs(pos[0] - x) + abs(pos[1] - y)
-            if current < closestMonster or closestMonster == -1:
-                closestMonster = current
 
-        if closestMonster == 0:
+        # find the monsters
+        i = 0
+        current = (-1, -1)
+        monsters = self.find_monsters(wrld)
+        #TODO take more than one monster into account
+        if len(monsters) != 0:
+            current = monsters[0]
+
+        # astar to the monsters
+        start = (x,y)
+
+        if start[0] < 0 or start[1] < 0:
+            return 0
+        if current[0] < 0 or current[1] < 0:
             return 0
 
-        return 1/ (1+closestMonster)
+        path = self.astar(wrld, start, current)
+        length = len(path)
+        return 1/ (1+length)
 
     # returning reasonable numbers
     # returns distance to exit normalized between 0.0 and 1.0
     def ft_exit_distance(self, wrld, x, y):
+
+        # find the exit
         exit = self.find_exit(wrld)
-        first = abs(exit[0] - x) + abs(exit[1] - y)
-        return 1/(1+first)
+        start = (x,y)
+
+        #astar to the exit
+        path = self.astar(wrld, start, exit)
+        length = len(path)
+
+        return 1/(1+length)
 
     # returning good numbers
     # retuns the 8 - the number of free moves normalized between 0.0 and 1.0
@@ -441,6 +458,12 @@ class TestCharacter(CharacterEntity):
         bestQValue = 0
 
         for r in possibleMoves:
+            if x+r[0] >= wrld.width() or x+r[0] < 0:
+                continue
+            if y+r[1] >= wrld.height() or y+r[1] < 0:
+                continue
+            if wrld.wall_at(x+r[0], y+r[1]):
+                continue
             newQValue = self.calc_qvalue(wrld, x+r[0], y+r[1])
             if newQValue > bestQValue:
                 bestQValue = newQValue
@@ -477,7 +500,7 @@ class TestCharacter(CharacterEntity):
 
     # main qlearning function
     def qLearn(self, wrld, x, y):
-        possibleMoves = [(0,0), (0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+        possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
         bestQValue = -100
         bestQMove = (0,0)
         monsterPos = self.find_monsters(wrld)
@@ -485,6 +508,11 @@ class TestCharacter(CharacterEntity):
         # iterate through all possible moves for character and monster
         for char in possibleMoves:
             currCharPos = x + char[0], y + char[1]
+
+            if currCharPos[0] >= wrld.width() or currCharPos[0] < 0:
+                continue
+            if currCharPos[1] >= wrld.height() or currCharPos[1] < 0:
+                continue
             if wrld.wall_at(currCharPos[0], currCharPos[1]):
                 continue
             # add move to be checked
@@ -497,8 +525,13 @@ class TestCharacter(CharacterEntity):
 
                     # check if the move is a wall, ignore if so
                     currMonsPos = pos[0] + monster[0], pos[1] + monster[1]
-                    if wrld.wall_at(currMonsPos):
+                    if currMonsPos[0] >= wrld.width() or currMonsPos[0] < 0:
                         continue
+                    if currMonsPos[1] >= wrld.height() or currMonsPos[1] < 0:
+                        continue
+                    if wrld.wall_at(currMonsPos[0], currMonsPos[1]):
+                        continue
+
                     # add monster move to be checked
                     currMonster = wrld.monsters_at(pos[0], pos[1])
                     currMonster[i].move(monster[0], monster[1])
@@ -507,7 +540,7 @@ class TestCharacter(CharacterEntity):
                     wrld2, events = wrld.next()
 
                     # calculate the q value of the new state
-                    newQValue = self.calc_qvalue(wrld2, wrld2.me(self).x, wrld2.me(self).y)
+                    newQValue = self.calc_qvalue(wrld2, currCharPos[0], currCharPos[1])
 
                     # if this is the best qvalue for a state found so far, save it
                     if newQValue > bestQValue:
@@ -531,7 +564,7 @@ class TestCharacter(CharacterEntity):
             actualQValue = reward + self.discount * self.calc_best_next_state(wrld, me.x, me.y)
             difference = self.calc_difference(actualQValue, self.lastQValue)
             self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
-            print("NEW WEIGHTS CALCULATED AT START OF ITERATION")
+            print("NEW WEIGHTS CALCULATED AT START OF ITERATION reward: ", reward)
 
         currentQValue = 0
         newQValue = 0
@@ -551,9 +584,11 @@ class TestCharacter(CharacterEntity):
 
         #if self.monsterNear(wrld, me.x, me.y):
         move = self.qLearn(wrld, me.x, me.y)
+        lastx = me.x + move[0]
+        lasty = me.y + move[1]
         self.move(move[0], move[1])
 
-        #print("Move: ", move[0], move[1])
+        print("Move: ", move[0], move[1])
         #print("Exit value: ", self.ft_exit_distance(wrld, 0, 1))
         #print("Monster value: ", self.ft_monster_distance(wrld, 0, 0))
 
@@ -580,13 +615,12 @@ class TestCharacter(CharacterEntity):
 
     # if the game is ended either by death or winning
     def done(self, wrld):
-        me = wrld.me(self)
-        reward = self.calc_reward(wrld, me.x, me.y)
-        actualQValue = reward + self.discount * self.calc_best_next_state(wrld, me.x, me.y)
+        reward = self.calc_reward(wrld, self.lastx, self.lasty)
+        actualQValue = reward + self.discount * self.calc_best_next_state(wrld, self.lastx, self.lasty)
         difference = self.calc_difference(actualQValue, self.lastQValue)
         self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
 
-        print("NEW WEIGHTS CALCULATED AT END OF GAME")
+        print("NEW WEIGHTS CALCULATED AT END OF GAME REWARD: ", reward)
 
 
 
