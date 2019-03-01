@@ -105,13 +105,6 @@ class TestCharacter1(CharacterEntity):
                                 finds[0] = ls
                             elif (wrld.exit_at(x, y)):
                                 ls = finds[1]
-
-                                ls.append((dx, dy))
-                                finds[1] = ls
-                            elif (wrld.wall_at(x, y)):
-                                ls = finds[2]
-                                ls.append((dx, dy))
-
                                 ls.append((dx, dy))
                                 finds[1] = ls
                             elif (wrld.wall_at(x, y)):
@@ -172,9 +165,9 @@ class TestCharacter1(CharacterEntity):
                             elif wrld.wall_at(x, y):
                                 finds[count] = (Node(x, y, 100))
                             elif wrld.bomb_at(x, y):
-                                finds[count] = (Node(x, y, 300))
+                                finds[count] = (Node(x, y, 10))
                             elif wrld.explosion_at(x, y):
-                                finds[count] = (Node(x, y, 300))
+                                finds[count] = (Node(x, y, 10))
                             elif wrld.monsters_at(x, y):
                                 finds[count] = (Node(x, y, 100))
                             elif wrld.characters_at(x, y):
