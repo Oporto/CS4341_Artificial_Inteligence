@@ -1,6 +1,7 @@
 # This is necessary to find the main code
 import sys
 import heapq
+import math
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
@@ -28,6 +29,22 @@ class Node:
         self.score = score
 
 class TestCharacter(CharacterEntity):
+
+    discount = 0.9
+    lrate = 0.2
+
+    f = open("weights.txt")
+    weights = f.read().splitlines()
+    print(weights[0], weights[1], weights[2])
+    i = 0
+
+    w1=float(weights[0])
+    w2=float(weights[1])
+    w3=float(weights[2])
+
+    f.close()
+
+
 
 # constructs a grid that is equivalent to the current world state
     def constructGrid(self, wrld):
@@ -139,6 +156,8 @@ class TestCharacter(CharacterEntity):
         # First check if exit is 1 move away\
         finds = [Node(-1, -1, -1)]*8
         count = 0
+        danger = 0
+        monsterLoc = self.find_monsters(wrld)
 
         for dx in [-1, 0, 1]:
             x = thisx + dx
@@ -151,11 +170,16 @@ class TestCharacter(CharacterEntity):
                     if (dx != 0) or (dy != 0):
                         # Avoid out-of-bound indexing
                         if (y >= 0) and (y < wrld.height()):
-                            # Check cases
-                            if dx == 1 and dy == 1 :
-                                continue
-                            elif dx == -1 and dy == -1 :
-                                continue
+                            for pos in monsterLoc:
+                                coord = pos[0], pos[1]
+                                currentcoord = wrld.me(self).x, wrld.me(self).y
+                                dist = abs(self.manhattan_distance(coord, currentcoord))
+                                if dist <= 4:
+                                    print("DANGER", dist)
+                                    danger = True
+
+                            if danger:
+                                finds[count] = (Node(x, y, 100))
                             elif wrld.empty_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             elif wrld.exit_at(x, y):
@@ -163,15 +187,20 @@ class TestCharacter(CharacterEntity):
                             elif wrld.wall_at(x, y):
                                 finds[count] = (Node(x, y, 100))
                             elif wrld.bomb_at(x, y):
-                                finds[count] = (Node(x, y, 1))
+                                finds[count] = (Node(x, y, 10))
                             elif wrld.explosion_at(x, y):
-                                finds[count] = (Node(x, y, 1))
+                                finds[count] = (Node(x, y, 10))
                             elif wrld.monsters_at(x, y):
-                                finds[count] = (Node(x, y, 1))
+                                finds[count] = (Node(x, y, 100))
                             elif wrld.characters_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             count += 1
+                            danger = False
         return finds
+
+    # Manhattan distance
+    def manhattan_distance(self, x1y1, x2y2):
+        return abs(x1y1[0] - x2y2[0]) + abs(x1y1[1] - x2y2[1])
 
     # returns a tuple of the exit. If no exit is found returns (0,0)
     def find_exit(self, wrld):
@@ -276,7 +305,7 @@ class TestCharacter(CharacterEntity):
             for i in range(-bomb_range, bomb_range+1):
                 if i != 0 and me.x + i in range(0,wrld.width()) and wrld.bomb_at(me.x + i, me.y):
                     safe.remove((dx,dy))
-                    break;
+                    break
         for (dx,dy) in safe:
             #y direction
             for j in range(-bomb_range, bomb_range+1):
@@ -296,12 +325,171 @@ class TestCharacter(CharacterEntity):
                             if wrld.monsters_at(check_x, check_y):
                                 safe.remove((dx,dy))
         return safe
-        
+
+    def getSafe(self, wrld, x, y):
+        unsafe = []
+        safe = [(0,0), (0,1), (0,-1), (1,0), (-1,0), (1,1), (-1, -1), (1,-1), (-1,1)]
+
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                current = (dx, dy)
+                if x + dx < wrld.width() and y + dy < wrld.height():
+                    if wrld.wall_at(x + dx, y+dy):
+                        if current in safe:
+                            unsafe.append(current)
+                            safe.remove(current)
+                # check for monsters
+                for i in range(-3, 3):
+                    for j in range(-3, 3):
+                        if x + dx + i < wrld.width():
+                            if y + dy + j < wrld.height():
+                                if wrld.monsters_at(x+dx+i, y+dy+j) and i in range(-2, 2) and j in range(-2,2):
+                                    if current in safe:
+                                        unsafe.append(current)
+                                        safe.remove(current)
+                                if wrld.bomb_at(x + dx + i, y + dy + j) and i in range(-3, 3) and j in range(-3,3):
+                                    if current in safe:
+                                        unsafe.append(current)
+                                        safe.remove(current)
+                                if wrld.explosion_at(x + dx + i, y + dy + j) and i in range(-1, 1) and j in range(-1,1):
+                                    if current in safe:
+                                        unsafe.append(current)
+                                        safe.remove(current)
+
+        return safe
+
+
+    def find_monsters(self, wrld):
+        i = 0
+        j = 0
+        monsterpos = []
+
+        while i < wrld.width():
+            while j < wrld.height():
+                if wrld.monsters_at(i, j):
+                    monster = (i, j)
+                    monsterpos.append(monster)
+                j+=1
+            i+=1
+            j=0
+        return monsterpos
+
+    # returns the distance to the nearest monster normalized between 0.0 and 1.0
+    def ft_monster_distance(self, wrld, x, y):
+        closestMonster = -1
+        i = 0
+        monsters = self.find_monsters(wrld)
+        for pos in monsters:
+            current = abs(pos[0] - x) + abs(pos[1] - y)
+            if current < closestMonster or closestMonster == -1:
+                closestMonster = current
+
+        if closestMonster == 0:
+            return 0
+
+        return 1/ (1+closestMonster)
+
+    # returning reasonable numbers
+    # returns distance to exit normalized between 0.0 and 1.0
+    def ft_exit_distance(self, wrld, x, y):
+        exit = self.find_exit(wrld)
+        first = abs(exit[0] - x) + abs(exit[1] - y)
+        return 1/(1+first)
+
+    # returning good numbers
+    # retuns the 8 - the number of free moves normalized between 0.0 and 1.0
+    def ft_trapped(self, wrld, x, y):
+        surroundings = self.check_surroundings(wrld, x, y)
+        moves = self.getSafe(wrld, x, y)
+        if len(moves) < 3:
+            return 1
+        else:
+            return 0
+
+    def calc_reward(self, wrld, x, y):
+        if wrld.monsters_at(x, y):
+            print("LOST!!!!!!")
+            return -1000
+        elif wrld.exit_at(x, y):
+            print("WIN!!!!!!!")
+            return 1000
+        elif wrld.explosion_at(x, y):
+            return -1000
+        return -1
+
+    def calc_qvalue(self, wrld, x, y):
+        return self.w1*self.ft_monster_distance(wrld, x, y) + self.w2*self.ft_exit_distance(wrld, x, y) + self.w3*self.ft_trapped(wrld, x, y)
+
+    def calc_best_next_state(self, wrld, x, y):
+        possibleMoves = [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+        bestQValue = 0
+
+        for r in possibleMoves:
+            newQValue = self.calc_qvalue(wrld, x+r[0], y+r[1])
+            if newQValue > bestQValue:
+                bestQValue = newQValue
+
+        return bestQValue
+
+    def calc_state(self, wrld, x, y):
+        return self.calc_reward(wrld, x, y) + self.discount * self.calc_best_next_state(wrld, x, y)
+
+    def calc_difference(self, q1, q2):
+        return q1-q2
+
+    def calc_weights(self, wrld, x, y, difference):
+        ft1 = self.ft_monster_distance(wrld, x, y)
+        ft2 = self.ft_exit_distance(wrld, x, y)
+        ft3 = self.ft_trapped(wrld, x, y)
+
+        print("FT1, FT2, FT3", ft1, ft2, ft3)
+
+        # wi = wi + learning rate * difference * calculated value
+        self.w1 = self.w1 + self.lrate * difference * ft1
+        self.w2 = self.w2 + self.lrate * difference * ft2
+        self.w3 = self.w3 + self.lrate * difference * ft3
+        print("w1, w2, w3: ", self.w1, self.w2, self.w3)
+
+    def monsterNear(self, wrld, x, y):
+
+
+        for r in range (-4,4):
+            for c in range (-4,4):
+                if r + x < wrld.width():
+                    if y + c < wrld.height():
+                        if wrld.monsters_at(r+x, y+c):
+                            return True
+        return False
+
+    def qLearn(self, wrld, x, y):
+        possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+        currentQValue = self.calc_qvalue(wrld, x, y)
+        newQValue = 0
+        bestQValue = -100
+        bestQMove = (0,0)
+
+        # iterate until goal is reached to evaluate entire state
+        for m in possibleMoves:
+            # for each move, calculate the value of the state
+            newQValue = self.calc_state(wrld, x+m[0], y+m[1])
+            if newQValue > bestQValue:
+                if not wrld.wall_at(x+m[0], y+m[1]):
+                    bestQValue = newQValue
+                    bestQMove = m[0], m[1]
+
+        difference = self.calc_difference(currentQValue, bestQValue)
+        self.calc_weights(wrld, x + bestQMove[0], x + bestQMove[1], difference)
+        return bestQMove
+
 
     def do(self, wrld):
         # Your code here
         
         me = wrld.me(self)
+        currentQValue = 0
+        newQValue = 0
+        bestQValue = 0
+        bestQMove = (0,0)
 
         surroundings = self.check_surroundings(wrld, me.x, me.y)
          #First check if exit is 1 move away
@@ -314,17 +502,31 @@ class TestCharacter(CharacterEntity):
         path = self.astar(wrld, start, goal)
         move = self.getMove(path, wrld)
 
-        if move in safe_moves:
-            self.move(move[0], move[1])
-            print("a star!")
-        else:
-            print("run away!")
-            for safem in safe_moves:
-                print(safe_moves)
-                if wrld.wall_at(me.x + safem[0], me.y + safem[1]) or wrld.monsters_at(me.x + safem[0], me.y + safem[1]):
-                    continue
-                else:
-                    self.move(safem[0], safem[1])
-                    print("an else and scared")
-                    print(safem)
-                    break
+        #if self.monsterNear(wrld, me.x, me.y):
+        #move = self.qLearn(wrld, me.x, me.y)
+        self.move(move[0], move[1])
+
+        print("Move: ", move[0], move[1])
+        print("Exit value: ", self.ft_exit_distance(wrld, 0, 1))
+        print("Monster value: ", self.ft_monster_distance(wrld, 0, 0))
+
+        pos = self.find_monsters(wrld)
+        for i in pos:
+            print("monster pos: ", i[0], i[1])
+
+        i = 0
+        f = open("weights.txt", "w")
+        while i < 3:
+            if i == 0:
+                str1 = "%f\n" % self.w1
+                f.write(str1)
+            if i == 1:
+                str2 = "%f\n" % self.w2
+                f.write(str2)
+            if i == 2:
+                str3 = "%f\n" % self.w3
+                f.write(str3)
+            i += 1
+        f.close()
+      #  else:
+       #     self.move(move[0], move[1])
