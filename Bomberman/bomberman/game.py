@@ -92,26 +92,12 @@ class Game:
 '''
     def go(self, wait=0):
         """ Main game loop. """
-        '''
-        if wait is 0:
-            def step():
-                pygame.event.clear()
-                input("Press Enter to continue or CTRL-C to stop...")
-        else:
-            def step():
-                pygame.time.wait(abs(wait))
-
-        colorama.init(autoreset=True)
-        self.display_gui()'''
-        self.draw()
-        #step()
+        
+                
         while not self.done():
-            #self.display_gui()
             (self.world, self.events) = self.world.next()
-            #self.display_gui()
             self.draw()
-            #step()
-        #colorama.deinit()
+            input("Press Enter to continue or CTRL-C to stop...")
 
     ###################
     # Private methods #

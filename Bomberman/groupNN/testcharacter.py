@@ -33,6 +33,8 @@ class TestCharacter(CharacterEntity):
     discount = 0.9
     lrate = 0.2
     followed_q = False
+    me_x = 0
+    me_y = 0
 
 # constructs a grid that is equivalent to the current world state
     def constructGrid(self, wrld):
@@ -163,7 +165,6 @@ class TestCharacter(CharacterEntity):
                                 currentcoord = wrld.me(self).x, wrld.me(self).y
                                 dist = abs(self.manhattan_distance(coord, currentcoord))
                                 if dist <= 4:
-                                    print("DANGER", dist)
                                     danger = True
                             if danger:
                                 finds[count] = (Node(x, y, 50))
@@ -356,22 +357,22 @@ class TestCharacter(CharacterEntity):
         ft5 = self.ft_isInBombRange(wrld,x,y)
 
         # save the values for next iteration to update weights
-        f.open("features.txt","W")
+        f = open("../features.txt","w")
         for ft in [ft0,ft1,ft2,ft3,ft4,ft5]:
-            f.write(ft)
+            f.write("%f\n" % ft)
         f.close()
         
-        f.open("qval.txt","W")
-        f.write(self.calc_qvalue(wrld,x,y,ft0))
+        f = open("../qval.txt","w")
+        f.write("%f\n" % self.calc_qvalue(wrld,x,y,ft0))
         f.close()
 
     # calculate q value for the given location
     def calc_qvalue(self, wrld, x, y, ft0):
     
         
-        f = open("weights.txt")
+        f = open("../weights.txt")
         weights = f.read().splitlines()
-        print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5])
+
         
     
         w0=float(weights[0])
@@ -391,7 +392,6 @@ class TestCharacter(CharacterEntity):
         ft5 = self.ft_isInBombRange(wrld,x,y)
 
         # save the values for next iteration to update weights
-        
 
         return w0*ft0 + w1*ft1 + w2*ft2 + w3*ft3 + w4*ft4 + w5*ft5
 
@@ -413,7 +413,7 @@ class TestCharacter(CharacterEntity):
 
     # calculate the new weights
     def calc_weights(self, difference):
-        f = open("features.txt")
+        f = open("../features.txt")
         fts = f.read().splitlines()
     
         ft0=float(fts[0])
@@ -425,11 +425,8 @@ class TestCharacter(CharacterEntity):
     
         f.close()
     
-        f = open("weights.txt")
+        f = open("../weights.txt")
         weights = f.read().splitlines()
-        print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5])
-        
-    
         w0=float(weights[0])
         w1=float(weights[1])
         w2=float(weights[2])
@@ -447,25 +444,25 @@ class TestCharacter(CharacterEntity):
         w5 = w5 + self.lrate * difference * ft5
         
         i = 0
-        f = open("weights.txt", "w")
+        f = open("../weights.txt", "w")
         while i < 6:
             if i == 0:
-                str0 = "%f\n" % self.w0
+                str0 = "%f\n" % w0
                 f.write(str0)
             if i == 1:
-                str1 = "%f\n" % self.w1
+                str1 = "%f\n" % w1
                 f.write(str1)
             if i == 2:
-                str2 = "%f\n" % self.w2
+                str2 = "%f\n" % w2
                 f.write(str2)
             if i == 3:
-                str3 = "%f\n" % self.w3
+                str3 = "%f\n" % w3
                 f.write(str3)
             if i == 4:
-                str4 = "%f\n" % self.w4
+                str4 = "%f\n" % w4
                 f.write(str4)
             if i == 5:
-                str5 = "%f\n" % self.w5
+                str5 = "%f\n" % w5
                 f.write(str5)
             i += 1
         f.close()
@@ -522,6 +519,7 @@ class TestCharacter(CharacterEntity):
                 if wrld.bomb_at(i,j):
                     dist = abs(i - x) + abs(j - y)
                     return 1/(1+dist)
+        return 0
                     
     def ft_isInBombRange(self, wrld, x,y):
         bomb_range = wrld.expl_range
@@ -538,19 +536,21 @@ class TestCharacter(CharacterEntity):
                 
     def send_move(self,wrld,move,is_astar):
         wrld.me(self).move(move[0], move[1])
-        w2 = wrld.next()
+        w2, evs = wrld.next()
         me2 = w2.me(self)
+        me_x = me2.x
+        me_y = me2.y
         self.save_qchoice(w2, me2.x, me2.y, is_astar)
         self.followed_q = True
         self.move(move[0],move[1])
         
-    def update_w():
-        f.open("reward.txt")
+    def update_w(self, wrld, me):
+        f = open("../reward.txt")
         rw = float(f.read().splitlines()[0])
         f.close()
         actualQValue = rw + self.discount * self.calc_best_next_state(wrld, me.x, me.y)
-        f.open("qval.txt")
-        q = float(f.read().splitline[0])
+        f = open("../qval.txt")
+        q = float(f.read())
         f.close()
         diff = actualQValue - q
         self.calc_weights(diff)
@@ -558,7 +558,7 @@ class TestCharacter(CharacterEntity):
     def do(self, wrld):
         me = wrld.me(self)
         if self.followed_q:
-            self.update_w()
+            self.update_w(wrld, me)
         surroundings = self.check_surroundings(wrld, me.x, me.y)
          #First check if exit is 1 move away
         if len(surroundings[1]) > 0:
@@ -570,7 +570,7 @@ class TestCharacter(CharacterEntity):
         astar_move = self.getMove(path, wrld)
         
         move, all_moves = self.qLearn(wrld, me.x, me.y, astar_move)
-        if wrld.wall_at(x + astar_move[0], y + astar_move[1]):
+        if wrld.wall_at(me.x + astar_move[0], me.y + astar_move[1]):
             threshold = 100
             stay_score = all_moves[(0,0)]
             if stay_score > threshold:
@@ -586,18 +586,16 @@ class TestCharacter(CharacterEntity):
 
     # if the game is ended either by death or winning
     def done(self, wrld):
-        f.open("reward.txt", "w")
-        me = wrld.me(self)
-        if wrld.exit_at(me.x,me.y):
+        f = open("../reward.txt", "w")
+        if wrld.exit_at(self.me_x,sself.me_y):
             f.write("1000")
-        elif wrld.explosion_at(me.x,me.y):
+        elif wrld.explosion_at(self.me_x,self.me_y):
             f.write("-1000")
-        elif wrld.monster_at(me.x,me.y):
+        elif wrld.monster_at(self.me_x,self.me_y):
             f.write("-1000")
         else:
             f.write("-0.1")
         f.close()
-        print("NEW WEIGHTS CALCULATED AT END OF GAME")
 
 
 
