@@ -10,7 +10,7 @@ class Game:
     def __init__(self, width, height, max_time, bomb_time, expl_duration, expl_range, sprite_dir="../../bomberman/sprites/"):
         self.world = RealWorld.from_params(width, height, max_time, bomb_time, expl_duration, expl_range)
         self.sprite_dir = sprite_dir
-        self.load_gui(width, height)
+        #self.load_gui(width, height)
 
     @classmethod
     def fromfile(cls, fname, sprite_dir="../../bomberman/sprites/"):
@@ -48,7 +48,7 @@ class Game:
             # All done
             return gm
 
-    def load_gui(self, board_width, board_height):
+    '''def load_gui(self, board_width, board_height):
         pygame.init()
         self.height = 24 * board_height
         self.width = 24 * board_width
@@ -89,10 +89,10 @@ class Game:
                 if self.world.bomb_at(x, y): # Bomb
                     self.screen.blit(self.bomb_sprite, rect)
         pygame.display.flip()
-
+'''
     def go(self, wait=0):
         """ Main game loop. """
-
+        '''
         if wait is 0:
             def step():
                 pygame.event.clear()
@@ -102,16 +102,16 @@ class Game:
                 pygame.time.wait(abs(wait))
 
         colorama.init(autoreset=True)
-        self.display_gui()
+        self.display_gui()'''
         self.draw()
-        step()
+        #step()
         while not self.done():
-            self.display_gui()
+            #self.display_gui()
             (self.world, self.events) = self.world.next()
-            self.display_gui()
+            #self.display_gui()
             self.draw()
-            step()
-        colorama.deinit()
+            #step()
+        #colorama.deinit()
 
     ###################
     # Private methods #
@@ -122,9 +122,9 @@ class Game:
 
     def done(self):
         # User Exit
-        for event in pygame.event.get():
+        '''for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return True
+                return True'''
         # Time's up
         if self.world.time <= 0:
             return True

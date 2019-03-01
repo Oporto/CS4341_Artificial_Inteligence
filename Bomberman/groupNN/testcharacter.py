@@ -324,7 +324,8 @@ class TestCharacter(CharacterEntity):
             if current < closestMonster or closestMonster == -1:
                 closestMonster = current
 
-        if closestMonster == 0:
+        if closestMonster == -1:
+            closestMonster == 0
             return 0
 
         return 1/(1+closestMonster)
@@ -361,11 +362,28 @@ class TestCharacter(CharacterEntity):
         f.close()
         
         f.open("qval.txt","W")
-        f.write(self.w0*ft0 + self.w1*ft1 + self.w2*ft2 + self.w3*ft3 + self.w4*ft4 + self.w5*ft5)
+        f.write(self.calc_qvalue(wrld,x,y,ft0))
         f.close()
 
     # calculate q value for the given location
     def calc_qvalue(self, wrld, x, y, ft0):
+    
+        
+        f = open("weights.txt")
+        weights = f.read().splitlines()
+        print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5])
+        
+    
+        w0=float(weights[0])
+        w1=float(weights[1])
+        w2=float(weights[2])
+        w3=float(weights[3])
+        w4=float(weights[4])
+        w5=float(weights[5])
+        
+    
+        f.close()
+        
         ft1 = self.ft_monster_distance(wrld, x, y)
         ft2 = self.ft_exit_distance(wrld, x, y)
         ft3 = self.ft_trapped(wrld, x, y)
@@ -375,7 +393,7 @@ class TestCharacter(CharacterEntity):
         # save the values for next iteration to update weights
         
 
-        return self.w0*ft0 + self.w1*ft1 + self.w2*ft2 + self.w3*ft3 + self.w4*ft4 + self.w5*ft5
+        return w0*ft0 + w1*ft1 + w2*ft2 + w3*ft3 + w4*ft4 + w5*ft5
 
     # go through next possible moves and generate a qvalue for each, return the best
     def calc_best_next_state(self, wrld, x, y):
@@ -471,7 +489,7 @@ class TestCharacter(CharacterEntity):
         qvals = dict()
         # iterate through all possible moves for character and monster
         for char in possibleMoves:
-            if char = a_star
+            if char == a_star:
                 is_a_star = 1
             else:
                 is_a_star = 0
@@ -499,22 +517,22 @@ class TestCharacter(CharacterEntity):
         return bestQMove, qvals
         
     def ft_bomb_distance(self, wrld, x, y):
-        for i in range(0, wrld.width):
-            for j in range(0, wrld.height):
+        for i in range(0, wrld.width()):
+            for j in range(0, wrld.height()):
                 if wrld.bomb_at(i,j):
                     dist = abs(i - x) + abs(j - y)
                     return 1/(1+dist)
                     
     def ft_isInBombRange(self, wrld, x,y):
-        range = wrld.expl_range()
+        bomb_range = wrld.expl_range
         for i in range(0, wrld.width()):
             for j in range(0, wrld.height()):
                 if wrld.bomb_at(i,j):
                     if i == x:
-                        if abs(j - y) <= range:
+                        if abs(j - y) <= bomb_range:
                             return 1
                     elif j == y:
-                        if abs(i - x) <= range:
+                        if abs(i - x) <= bomb_range:
                             return 1
         return 0
                 
@@ -539,7 +557,7 @@ class TestCharacter(CharacterEntity):
         
     def do(self, wrld):
         me = wrld.me(self)
-        if followed_q:
+        if self.followed_q:
             self.update_w()
         surroundings = self.check_surroundings(wrld, me.x, me.y)
          #First check if exit is 1 move away
@@ -565,30 +583,6 @@ class TestCharacter(CharacterEntity):
             is_astar = False
             
         self.send_move(wrld, move, is_astar)
-
-        i = 0
-        f = open("weights.txt", "w")
-        while i < 6:
-            if i == 0:
-                str0 = "%f\n" % self.w0
-                f.write(str0)
-            if i == 1:
-                str1 = "%f\n" % self.w1
-                f.write(str1)
-            if i == 2:
-                str2 = "%f\n" % self.w2
-                f.write(str2)
-            if i == 3:
-                str3 = "%f\n" % self.w3
-                f.write(str3)
-            if i == 4:
-                str4 = "%f\n" % self.w4
-                f.write(str4)
-            if i == 5:
-                str5 = "%f\n" % self.w5
-                f.write(str5)
-            i += 1
-        f.close()
 
     # if the game is ended either by death or winning
     def done(self, wrld):
