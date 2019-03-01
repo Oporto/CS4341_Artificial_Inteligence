@@ -460,6 +460,27 @@ class TestCharacter(CharacterEntity):
                         if wrld.monsters_at(r+x, y+c):
                             return True
         return False
+        
+    def ft_bomb_distance(self, wrld, x, y):
+        for i in range(0, wrld.width):
+            for j in range(0, wrld.height):
+                if wrld.bomb_at(i,j):
+                    dist = abs(i - x) + abs(j - y)
+                    return 1/(1+dist)
+                    
+    def ft_isInBombRange(self, wrld, x,y):
+        range = wrld.expl_range()
+        for i in range(0, wrld.width):
+            for j in range(0, wrld.height):
+                if wrld.bomb_at(i,j):
+                    if i = x:
+                        if abs(j - y) <= range:
+                            return 1
+                    elif j = y:
+                        if abs(i - x) <= range:
+                            return 1
+        return 0
+                
 
     def qLearn(self, wrld, x, y):
         possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
@@ -501,7 +522,6 @@ class TestCharacter(CharacterEntity):
 
         path = self.astar(wrld, start, goal)
         move = self.getMove(path, wrld)
-
         #if self.monsterNear(wrld, me.x, me.y):
         #move = self.qLearn(wrld, me.x, me.y)
         self.move(move[0], move[1])
