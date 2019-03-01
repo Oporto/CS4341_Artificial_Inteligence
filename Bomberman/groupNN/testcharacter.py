@@ -2,6 +2,8 @@
 import sys
 import heapq
 import math
+import random
+
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
@@ -281,11 +283,11 @@ class TestCharacter(CharacterEntity):
     def get_safe_moves(self, wrld, surroundings, me):
         ww = wrld.width()
         wh = wrld.height()
-        safe = []
+        safe = set()
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 if me.x + dx in range(0, ww) and me.y in range(0, wh):
-                    safe.append((dx, dy))
+                    safe.add((dx, dy))
         #Bomb, monster, explosion and character check
         if wrld.bomb_at(me.x, me.y):
             safe.remove((0,0))
@@ -298,19 +300,22 @@ class TestCharacter(CharacterEntity):
         for dir in surroundings[6]:
             safe.remove(dir)
         #Check for bomb range
-        bomb_range = wrld.expl_range
+        bomb_range = wrld.expl_range + 1
+        notSafeList = set()
         for (dx,dy) in safe:
             #x direction
             for i in range(-bomb_range, bomb_range+1):
-                if i != 0 and me.x + i in range(0,wrld.width()) and wrld.bomb_at(me.x + i, me.y):
-                    safe.remove((dx,dy))
-                    break
+                if me.x + dx + i in range(0,wrld.width()) and wrld.bomb_at(me.x +dx+ i, me.y):
+                    notSafeList.add((dx,dy))
         for (dx,dy) in safe:
             #y direction
             for j in range(-bomb_range, bomb_range+1):
-                if j != 0 and me.y + j in range(0,wrld.height()) and wrld.bomb_at(me.x , me.y + j):
-                    safe.remove((dx,dy))
-                    break;
+                if me.y + dy+ j in range(0,wrld.height()) and wrld.bomb_at(me.x , me.y+dy + j):
+                    notSafeList.add((dx,dy))
+        for x in notSafeList:
+            safe.remove(x)
+        print("Not Safe List")
+        print(notSafeList)
         
         #Check cells near monster
         monst_range = 2
@@ -659,7 +664,3 @@ class TestCharacter(CharacterEntity):
                 f.write(str3)
             i += 1
         f.close()
-
-
-
-
