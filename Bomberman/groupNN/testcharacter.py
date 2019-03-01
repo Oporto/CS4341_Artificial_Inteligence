@@ -8,6 +8,12 @@ from entity import CharacterEntity
 from colorama import Fore, Back
 
 
+'''*******************************************************************************
+
+    PriorityQueue and Node classes for astar algorithm
+   *******************************************************************************
+    '''
+
 class PriorityQueue:
     def __init__(self):
         self.queue = []
@@ -28,30 +34,48 @@ class Node:
         self.y = y
         self.score = score
 
+'''*******************************************************************************
+
+    PriorityQueue and Node classes for astar algorithm
+   *******************************************************************************
+    '''
+
 class TestCharacter(CharacterEntity):
 
+    '''_______________________________________________ fields'''
     discount = 0.9
     lrate = 0.2
     lastQValue = 0
     lastft1 = 0
     lastft2 = 0
     lastft3 = 0
+    lastft4 = 0
+    lastft5 = 0
+    lastft6 = 0
+    lastft7 = 0
     lastxvalue = 0
     lastyvalue = 0
+    monster = 0
+    wallCount = 0
 
+    '''_______________________________________________ read from text file'''
     f = open("weights.txt")
     weights = f.read().splitlines()
-    print(weights[0], weights[1], weights[2])
+    print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5], weights[6])
+    print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5], weights[6])
     i = 0
 
-    w1=float(weights[0])
-    w2=float(weights[1])
-    w3=float(weights[2])
+    w1 = float(weights[0])
+    w2 = float(weights[1])
+    w3 = float(weights[2])
+    w4 = float(weights[3])
+    w5 = float(weights[4])
+    w6 = float(weights[5])
+    w7 = float(weights[6])
 
     f.close()
 
-
-
+    '''_______________________________________________ functions'''
 # constructs a grid that is equivalent to the current world state
     def constructGrid(self, wrld):
         i = 0
@@ -150,6 +174,7 @@ class TestCharacter(CharacterEntity):
                                 finds[6] = ls
         return finds
 
+    '''_______________________________________________ astar'''
     # returns nodes surrounding the current position of the character
     def get_neighbors(self, wrld, thisx, thisy):
         # First check if exit is 1 move away\
@@ -200,19 +225,6 @@ class TestCharacter(CharacterEntity):
     def manhattan_distance(self, x1y1, x2y2):
         return abs(x1y1[0] - x2y2[0]) + abs(x1y1[1] - x2y2[1])
 
-    # returns a tuple of the exit. If no exit is found returns (0,0)
-    def find_exit(self, wrld):
-        w = 0
-        h = 0
-
-        while w < wrld.width():
-            while h < wrld.height():
-                if wrld.exit_at(w, h):
-                    return w, h
-                h += 1
-            w += 1
-            h = 0
-        return 0, 0
 
     # heuristic function for A*
     def heuristic(self, a, b):
@@ -357,7 +369,25 @@ class TestCharacter(CharacterEntity):
 
         return safe
 
+        # returns a tuple of the exit. If no exit is found returns (0,0)
 
+    '''_______________________________________________ QLearning'''
+
+    #returns nearest exit
+    def find_exit(self, wrld):
+        w = 0
+        h = 0
+
+        while w < wrld.width():
+            while h < wrld.height():
+                if wrld.exit_at(w, h):
+                    return w, h
+                h += 1
+            w += 1
+            h = 0
+        return 0, 0
+
+    # returns list of monster positions
     def find_monsters(self, wrld):
         i = 0
         j = 0
@@ -373,16 +403,47 @@ class TestCharacter(CharacterEntity):
             j=0
         return monsterpos
 
+    # returns location of nearest bomb
+    def find_bomb(self, wrld):
+        i = 0
+        j = 0
+        bombpos = (-1, -1)
+
+        while i < wrld.width():
+            while j < wrld.height():
+                if wrld.bomb_at(i, j):
+                    bombpos = (i, j)
+                j += 1
+            i += 1
+            j = 0
+        return bombpos
+
+        # returns location of nearest bomb
+
+    def find_explosions(self, wrld):
+        i = 0
+        j = 0
+        explosions = []
+
+        while i < wrld.width():
+            while j < wrld.height():
+                if wrld.explosion_at(i, j):
+                    explosion = (i, j)
+                    explosions.append(explosion)
+                j += 1
+            i += 1
+            j = 0
+        return explosions
+
     # returns the distance to the nearest monster normalized between 0.0 and 1.0
-    def ft_monster_distance(self, wrld, x, y):
+    # i is the monster number (0 and 1)
+    def ft_monster_distance(self, wrld, x, y, i):
 
         # find the monsters
-        i = 0
         current = (-1, -1)
         monsters = self.find_monsters(wrld)
-        #TODO take more than one monster into account
-        if len(monsters) != 0:
-            current = monsters[0]
+        if len(monsters) > i:
+            current = monsters[i]
 
         # astar to the monsters
         start = (x,y)
@@ -415,15 +476,82 @@ class TestCharacter(CharacterEntity):
 
         return 1/(1+length)
 
-    # returning good numbers
-    # retuns the 8 - the number of free moves normalized between 0.0 and 1.0
+    # returns 1 if trapped and 0 if not
     def ft_trapped(self, wrld, x, y):
         surroundings = self.check_surroundings(wrld, x, y)
         moves = self.getSafe(wrld, x, y)
-        if len(moves) < 3:
+        if len(moves) < 4:
             return 1
         else:
             return 0
+
+    # returns the astar distance to the nearest bomb
+    # normalized between 0 and 1
+    def ft_distance_to_bomb(self, wrld, x, y):
+        # find the bomb
+        bomb = self.find_bomb(wrld)
+
+        # if there are no bombs return 0
+        if bomb == None:
+            return 0
+
+        start = (x, y)
+
+        if start == bomb:
+            return 1
+        # if same row return 1
+        if x == bomb[0]:
+            return 1
+        # if same column return 1
+        if y == bomb[1]:
+            return 1
+        return 0
+
+    def ft_distance_to_explosion(self, wrld, x, y):
+        # find the exit
+        explosions = self.find_explosions(wrld)
+
+        # if there are no explosions return 0
+        if len(explosions) == 0:
+            return 0
+
+        for e in explosions:
+            start = (x, y)
+
+            if start == e:
+                return 1
+            path = self.astar(wrld, start, e)
+            length = len(path)
+        return 1 / (1 + length)
+
+    def ft_bomb_distance_to_monster(self, wrld):
+        bomb = self.find_bomb(wrld)
+        minlength = 99
+
+        # if there are no bombs return 0
+        if bomb == (-1,-1):
+            return 0
+
+        monsters = self.find_monsters(wrld)
+        if len(monsters) != 0:
+            for m in monsters:
+                if bomb == m:
+                    return 1
+                else:
+                    # calculate astar path
+                    path = self.astar(wrld, bomb, m)
+                    length = len(path)
+                    if length < minlength:
+                        minlength = length
+
+                # if the monster is within 3 moves and
+                # on a horizontal or vertical line with the character
+                if bomb[0] == m[0] and minlength <= 5:
+                    return 1
+                elif bomb[1] == m[1] and minlength <= 5:
+                    return 1
+                return 1 / (1+minlength/2)
+        return 0
 
     def calc_reward(self, wrld, x, y):
         if wrld.monsters_at(x, y):
@@ -436,28 +564,45 @@ class TestCharacter(CharacterEntity):
             return -100
         elif wrld.bomb_at(x, y):
             return -100
+        if self.killed_monster(wrld):
+            return 200
+        if self.destroyed_wall(wrld):
+            return 10
         return 1
 
     def end_calc_reward(self, wrld, x, y):
         if wrld.exit_at(x, y):
             return 100
+        if self.killed_monster(wrld):
+            return 200
+        if self.destroyed_wall(wrld):
+            return 10
         else:
             return -100
 
     # calculate q value for the given location
     def calc_qvalue(self, wrld, x, y):
-        ft1 = self.ft_monster_distance(wrld, x, y)
+
+        # generate all features
+        ft1 = self.ft_monster_distance(wrld, x, y, 0)
         ft2 = self.ft_exit_distance(wrld, x, y)
         ft3 = self.ft_trapped(wrld, x, y)
-
-        print("Exit distance: ", ft2)
+        ft4 = self.ft_monster_distance(wrld, x, y, 1)
+        ft5 = self.ft_distance_to_bomb(wrld, x, y)
+        ft6 = self.ft_distance_to_explosion(wrld, x, y)
+        ft7 = self.ft_bomb_distance_to_monster(wrld)
 
         # save the values for next iteration to update weights
         self.lastft1 = ft1
         self.lastft2 = ft2
         self.lastft3 = ft3
+        self.lastft4 = ft4
+        self.lastft5 = ft5
+        self.lastft6 = ft6
+        self.lastft7 = ft7
 
-        return self.w1*ft1 + self.w2*ft2 + self.w3*ft3
+        # calculate QValue
+        return self.w1*ft1 + self.w2*ft2 + self.w3*ft3 + self.w4*ft4 + self.w5*ft5 + self.w6*ft6 + self.w7*ft7
 
     # go through next possible moves and generate a qvalue for each, return the best
     def calc_best_next_state(self, wrld, x, y):
@@ -486,14 +631,18 @@ class TestCharacter(CharacterEntity):
         return q1-q2
 
     # calculate the new weights
-    def calc_weights(self, difference, ft1, ft2, ft3):
-        print("FT1, FT2, FT3", ft1, ft2, ft3)
+    def calc_weights(self, difference, ft1, ft2, ft3, ft4, ft5, ft6, ft7):
+        print("FT1, FT2, FT3, FT4, FT5, FT6, FT7: ", ft1, ft2, ft3, ft4, ft5, ft6, ft7)
 
         # wi = wi + learning rate * difference * calculated value
         self.w1 = self.w1 + self.lrate * difference * ft1
         self.w2 = self.w2 + self.lrate * difference * ft2
         self.w3 = self.w3 + self.lrate * difference * ft3
-        print("w1, w2, w3: ", self.w1, self.w2, self.w3)
+        self.w4 = self.w4 + self.lrate * difference * ft4
+        self.w5 = self.w5 + self.lrate * difference * ft5
+        self.w6 = self.w6 + self.lrate * difference * ft6
+        self.w7 = self.w7 + self.lrate * difference * ft7
+        print("w1, w2, w3, w4, w5, w6, w7: ", self.w1, self.w2, self.w3, self.w4, self.w5, self.w6, self.w7)
 
     # if there is a monster within the given range
     def monsterNear(self, wrld, x, y):
@@ -505,9 +654,22 @@ class TestCharacter(CharacterEntity):
                             return True
         return False
 
+    # returns true if a monster was killed
+    def killed_monster(self, monsters):
+        if monsters < self.monster:
+            return True
+        return False
+
+    # returns true if a wall was destroyed
+    def destroyed_wall(self, walls):
+        if walls < self.wallCount:
+            self.wallCount = walls
+            return True
+        return False
+
     # main qlearning function
     def qLearn(self, wrld, x, y):
-        possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
+        possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1), (2, 2)]
         bestQValue = -100
         bestQMove = (0,0)
         monsterPos = self.find_monsters(wrld)
@@ -522,50 +684,31 @@ class TestCharacter(CharacterEntity):
                 continue
             if wrld.wall_at(currCharPos[0], currCharPos[1]):
                 continue
-            # add move to be checked
-            wrld.me(self).move(char[0], char[1])
 
-            #go through all the possible monster positions
-            i = 0
+            if char == (2, 2):
+                if self.find_bomb(wrld) == (-1,-1):
+                    # add bomb placement to be checked
+                    wrld.me(self).place_bomb()
+                else:
+                    continue
+            else:
+                # add move to be checked
+                wrld.me(self).move(char[0], char[1])
+
             # generate new world given current state
             wrld2, events = wrld.next()
 
             # calculate the q value of the new state
             newQValue = self.calc_qvalue(wrld2, currCharPos[0], currCharPos[1])
 
+            for e in events:
+                if e.tpe == 0:
+                    newQValue += 10
+
             # if this is the best qvalue for a state found so far, save it
             if newQValue > bestQValue:
                 bestQValue = newQValue
                 bestQMove = char
-            '''
-            for pos in monsterPos:
-                for monster in possibleMoves:
-
-                    # check if the move is a wall, ignore if so
-                    currMonsPos = pos[0] + monster[0], pos[1] + monster[1]
-                    if currMonsPos[0] >= wrld.width() or currMonsPos[0] < 0:
-                        continue
-                    if currMonsPos[1] >= wrld.height() or currMonsPos[1] < 0:
-                        continue
-                    if wrld.wall_at(currMonsPos[0], currMonsPos[1]):
-                        continue
-
-                    # add monster move to be checked
-                    currMonster = wrld.monsters_at(pos[0], pos[1])
-                    currMonster[i].move(monster[0], monster[1])
-
-                    # generate new world given current state
-                    wrld2, events = wrld.next()
-
-                    # calculate the q value of the new state
-                    newQValue = self.calc_qvalue(wrld2, currCharPos[0], currCharPos[1])
-
-                    # if this is the best qvalue for a state found so far, save it
-                    if newQValue > bestQValue:
-                        bestQValue = newQValue
-                        bestQMove = char
-                        '''
-            i += 1
 
         # save the best qValue as it will be used to calculate weights in next iteration
         self.lastQValue = bestQValue
@@ -579,10 +722,36 @@ class TestCharacter(CharacterEntity):
 
         # if we want to update weights
         if self.lastQValue != 0:
+            # update wall count and monster count
+            i = 0
+            j = 0
+            count = 0
+            while i < wrld.width():
+                while j < wrld.height():
+                    if wrld.wall_at(i, j):
+                        count += 1
+                    j += 1
+                i += 1
+                j = 0
+            monsters = self.find_monsters(wrld)
+            length = len(monsters)
+
+
+            # add value to reward if a monster was killed or wall was destroyed
             reward = self.calc_reward(wrld, me.x, me.y)
+            if self.destroyed_wall(count):
+                reward+=10
+            elif self.killed_monster(length):
+                reward+=100
+
+            #update wall count and monster count for next iteration
+            self.wallCount = count
+            self.monster = length
+
+            # calculate actual qvalue for state, then difference between current state and last state
             actualQValue = reward + self.discount * self.calc_best_next_state(wrld, me.x, me.y)
             difference = self.calc_difference(actualQValue, self.lastQValue)
-            self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
+            self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3, self.lastft4, self.lastft5, self.lastft6, self.lastft7)
             print("NEW WEIGHTS CALCULATED AT START OF ITERATION reward: ", reward)
 
         currentQValue = 0
@@ -607,6 +776,9 @@ class TestCharacter(CharacterEntity):
         self.lastxvalue = me.x + move[0]
         self.lastyvalue = me.y + move[1]
 
+        if move[0] == 2:
+            if move[1] == 2:
+                self.place_bomb()
         self.move(move[0], move[1])
 
         print("Move: ", move[0], move[1])
@@ -620,7 +792,7 @@ class TestCharacter(CharacterEntity):
         # save the new weights
         i = 0
         f = open("weights.txt", "w")
-        while i < 3:
+        while i < 7:
             if i == 0:
                 str1 = "%f\n" % self.w1
                 f.write(str1)
@@ -630,6 +802,18 @@ class TestCharacter(CharacterEntity):
             if i == 2:
                 str3 = "%f\n" % self.w3
                 f.write(str3)
+            if i == 3:
+                str4 = "%f\n" % self.w4
+                f.write(str4)
+            if i == 4:
+                str5 = "%f\n" % self.w5
+                f.write(str5)
+            if i == 5:
+                str6 = "%f\n" % self.w6
+                f.write(str6)
+            if i == 6:
+                str7 = "%f\n" % self.w7
+                f.write(str7)
             i += 1
         f.close()
       #  else:
@@ -637,17 +821,43 @@ class TestCharacter(CharacterEntity):
 
     # if the game is ended either by death or winning
     def done(self, wrld):
+        # update wall count and monster count
+        i = 0
+        j = 0
+        count = 0
+        while i < wrld.width():
+            while j < wrld.height():
+                if wrld.wall_at(i, j):
+                    count += 1
+                j += 1
+            i += 1
+            j = 0
+        monsters = self.find_monsters(wrld)
+        length = len(monsters)
+
+        # add value to reward if a monster was killed or wall was destroyed
+        reward = self.end_calc_reward(wrld)
+        if self.destroyed_wall(count):
+            reward += 10
+        elif self.killed_monster(length):
+            reward += 100
+
+        # update wall count and monster count for next iteration
+        self.wallCount = count
+        self.monster = length
+
+        # calculate final result and update weights
         reward = self.end_calc_reward(wrld, self.lastxvalue, self.lastyvalue)
         actualQValue = reward + self.discount * self.calc_best_next_state(wrld, self.lastxvalue, self.lastyvalue)
         difference = self.calc_difference(actualQValue, self.lastQValue)
-        self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
+        self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3, self.lastft4, self.lastft5, self.lastft6, self.lastft7)
 
         print("NEW WEIGHTS CALCULATED AT END OF GAME REWARD: ", reward)
 
         # save the new weights
         i = 0
         f = open("weights.txt", "w")
-        while i < 3:
+        while i < 7:
             if i == 0:
                 str1 = "%f\n" % self.w1
                 f.write(str1)
@@ -657,9 +867,17 @@ class TestCharacter(CharacterEntity):
             if i == 2:
                 str3 = "%f\n" % self.w3
                 f.write(str3)
+            if i == 3:
+                str4 = "%f\n" % self.w4
+                f.write(str4)
+            if i == 4:
+                str5 = "%f\n" % self.w5
+                f.write(str5)
+            if i == 5:
+                str6 = "%f\n" % self.w6
+                f.write(str6)
+            if i == 6:
+                str7 = "%f\n" % self.w7
+                f.write(str7)
             i += 1
         f.close()
-
-
-
-
