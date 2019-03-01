@@ -390,7 +390,7 @@ class TestCharacter(CharacterEntity):
         if closestMonster == 0:
             return 0
 
-        return 1/ (1+closestMonster)
+        return 1/(1+closestMonster)
 
     # returning reasonable numbers
     # returns distance to exit normalized between 0.0 and 1.0
@@ -475,6 +475,7 @@ class TestCharacter(CharacterEntity):
                             return True
         return False
 
+
     # main qlearning function
     def qLearn(self, wrld, x, y):
         possibleMoves = [(0,0), (0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
@@ -520,6 +521,48 @@ class TestCharacter(CharacterEntity):
 
         # return best possible move
         return bestQMove
+        
+    def ft_bomb_distance(self, wrld, x, y):
+        for i in range(0, wrld.width):
+            for j in range(0, wrld.height):
+                if wrld.bomb_at(i,j):
+                    dist = abs(i - x) + abs(j - y)
+                    return 1/(1+dist)
+                    
+    def ft_isInBombRange(self, wrld, x,y):
+        range = wrld.expl_range()
+        for i in range(0, wrld.width()):
+            for j in range(0, wrld.height()):
+                if wrld.bomb_at(i,j):
+                    if i == x:
+                        if abs(j - y) <= range:
+                            return 1
+                    elif j == y:
+                        if abs(i - x) <= range:
+                            return 1
+        return 0
+                
+
+    def qLearn2(self, wrld, x, y,astar_move):
+        possibleMoves = [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]
+        currentQValue = self.calc_qvalue(wrld, x, y)
+        newQValue = 0
+        bestQValue = -100
+        bestQMove = (0,0)
+        qvalues = dict()
+        # iterate until goal is reached to evaluate entire state
+        for m in possibleMoves:
+            # for each move, calculate the value of the state
+            newQValue = self.calc_state(wrld, x+m[0], y+m[1])
+            qvalues[m] = newQValue
+            if newQValue > bestQValue:
+                if not wrld.wall_at(x+m[0], y+m[1]):
+                    bestQValue = newQValue
+                    bestQMove = m[0], m[1]
+
+        difference = self.calc_difference(currentQValue, bestQValue)
+        self.calc_weights(wrld, x + bestQMove[0], x + bestQMove[1], difference)
+        return bestQMove, qvalues
 
 
     def do(self, wrld):
@@ -551,6 +594,24 @@ class TestCharacter(CharacterEntity):
 
         #if self.monsterNear(wrld, me.x, me.y):
         move = self.qLearn(wrld, me.x, me.y)
+        path = self.astar(wrld, start, goal)
+        astar_move = self.getMove(path, wrld)
+        
+        move, all_moves = self.qLearn2(wrld, me.x, me.y, astar_move)
+        if wrld.wall_at(x + move[0], y + move[1]):
+            threshold = 0
+            stay_score = all_moves[(0,0)]
+            if stay_score > threshold:
+                self.place_bomb()
+            else:
+                sec_best = (0,0)
+                best_score = stay_score
+                for mv in [(dx,dy) for dx in [-1,0,1] for dy in [-1,0,1]]:
+                    next_score = all_moves[mv]
+                    if next_score > best_score and not wrld.wall_at(x + mv[0], y + mv[1]):
+                        best_score = next_score
+                        sec_best = move
+                move = sec_best
         self.move(move[0], move[1])
 
         #print("Move: ", move[0], move[1])
