@@ -36,8 +36,8 @@ class TestCharacter(CharacterEntity):
     lastft1 = 0
     lastft2 = 0
     lastft3 = 0
-    lastx = 0
-    lasty = 0
+    lastxvalue = 0
+    lastyvalue = 0
 
     f = open("weights.txt")
     weights = f.read().splitlines()
@@ -270,6 +270,7 @@ class TestCharacter(CharacterEntity):
         current = path[0][goal]
         newpath = [goal]
 
+
         while current != start:
             newpath.append(current)
             current = path[0][current]
@@ -398,6 +399,9 @@ class TestCharacter(CharacterEntity):
         if current[0] < 0 or current[1] < 0:
             return 0
 
+        if start == current:
+            return 1
+
         path = self.astar(wrld, start, current)
         length = len(path)
         return 1/ (1+length)
@@ -411,6 +415,8 @@ class TestCharacter(CharacterEntity):
         start = (x,y)
 
         #astar to the exit
+        if start == exit:
+            return 1
         path = self.astar(wrld, start, exit)
         length = len(path)
 
@@ -427,23 +433,31 @@ class TestCharacter(CharacterEntity):
             return 0
 
     def calc_reward(self, wrld, x, y):
-        if wrld.explosion_at(x, y):
+        if wrld.monsters_at(x, y):
             print("LOST!!!!!!")
-            return -1000
+            return -100
         elif wrld.exit_at(x, y):
             print("WIN!!!!!!!")
-            return 1000
+            return 200
         elif wrld.explosion_at(x, y):
-            return -1000
+            return -100
         elif wrld.bomb_at(x, y):
-            return -1000
-        return -1
+            return -100
+        return 1
+
+    def end_calc_reward(self, wrld, x, y):
+        if wrld.exit_at(x, y):
+            return 100
+        else:
+            return -100
 
     # calculate q value for the given location
     def calc_qvalue(self, wrld, x, y):
         ft1 = self.ft_monster_distance(wrld, x, y)
         ft2 = self.ft_exit_distance(wrld, x, y)
         ft3 = self.ft_trapped(wrld, x, y)
+
+        print("Exit distance: ", ft2)
 
         # save the values for next iteration to update weights
         self.lastft1 = ft1
@@ -520,6 +534,17 @@ class TestCharacter(CharacterEntity):
 
             #go through all the possible monster positions
             i = 0
+            # generate new world given current state
+            wrld2, events = wrld.next()
+
+            # calculate the q value of the new state
+            newQValue = self.calc_qvalue(wrld2, currCharPos[0], currCharPos[1])
+
+            # if this is the best qvalue for a state found so far, save it
+            if newQValue > bestQValue:
+                bestQValue = newQValue
+                bestQMove = char
+            '''
             for pos in monsterPos:
                 for monster in possibleMoves:
 
@@ -546,7 +571,8 @@ class TestCharacter(CharacterEntity):
                     if newQValue > bestQValue:
                         bestQValue = newQValue
                         bestQMove = char
-                i += 1
+                        '''
+            i += 1
 
         # save the best qValue as it will be used to calculate weights in next iteration
         self.lastQValue = bestQValue
@@ -584,8 +610,10 @@ class TestCharacter(CharacterEntity):
 
         #if self.monsterNear(wrld, me.x, me.y):
         move = self.qLearn(wrld, me.x, me.y)
-        lastx = me.x + move[0]
-        lasty = me.y + move[1]
+
+        self.lastxvalue = me.x + move[0]
+        self.lastyvalue = me.y + move[1]
+
         self.move(move[0], move[1])
 
         print("Move: ", move[0], move[1])
@@ -596,6 +624,7 @@ class TestCharacter(CharacterEntity):
         for i in pos:
             print("monster pos: ", i[0], i[1])
 
+        # save the new weights
         i = 0
         f = open("weights.txt", "w")
         while i < 3:
@@ -615,12 +644,28 @@ class TestCharacter(CharacterEntity):
 
     # if the game is ended either by death or winning
     def done(self, wrld):
-        reward = self.calc_reward(wrld, self.lastx, self.lasty)
-        actualQValue = reward + self.discount * self.calc_best_next_state(wrld, self.lastx, self.lasty)
+        reward = self.end_calc_reward(wrld, self.lastxvalue, self.lastyvalue)
+        actualQValue = reward + self.discount * self.calc_best_next_state(wrld, self.lastxvalue, self.lastyvalue)
         difference = self.calc_difference(actualQValue, self.lastQValue)
         self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3)
 
         print("NEW WEIGHTS CALCULATED AT END OF GAME REWARD: ", reward)
+
+        # save the new weights
+        i = 0
+        f = open("weights.txt", "w")
+        while i < 3:
+            if i == 0:
+                str1 = "%f\n" % self.w1
+                f.write(str1)
+            if i == 1:
+                str2 = "%f\n" % self.w2
+                f.write(str2)
+            if i == 2:
+                str3 = "%f\n" % self.w3
+                f.write(str3)
+            i += 1
+        f.close()
 
 
 

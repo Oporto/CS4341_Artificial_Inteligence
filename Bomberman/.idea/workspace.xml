@@ -14,8 +14,8 @@
       <file leaf-file-name="testcharacter.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/groupNN/testcharacter.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="373">
-              <caret line="542" column="27" lean-forward="true" selection-start-line="542" selection-start-column="27" selection-end-line="542" selection-end-column="27" />
+            <state relative-caret-position="7633">
+              <caret line="449" column="20" selection-start-line="449" selection-start-column="20" selection-end-line="449" selection-end-column="20" />
               <folding>
                 <element signature="e#42#52#0" expanded="true" />
               </folding>
@@ -104,9 +104,10 @@
     <findStrings>
       <find>nah</find>
       <find>discount</find>
-      <find>calc_reward</find>
       <find>calc_qv</find>
       <find>calc_re</find>
+      <find>self.lastx</find>
+      <find>calc_reward</find>
     </findStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -167,7 +168,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.variant1">
+  <component name="RunManager" selected="Python.variant3">
     <configuration name="v1" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Bomberman" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -305,18 +306,17 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1200" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5151042" side_tool="true" visible="true" weight="0.40243903" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.515625" side_tool="true" visible="true" weight="0.40243903" />
       <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.48489583" visible="true" weight="0.40243903" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.484375" visible="true" weight="0.40243903" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.48697916" weight="0.39982578" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.4859375" weight="0.39982578" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -331,14 +331,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <condition expression="start == (0, -1)" language="Python" />
-          <url>file://$PROJECT_DIR$/groupNN/testcharacter.py</url>
-          <line>232</line>
-          <option name="timeStamp" value="159" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -346,7 +338,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="168" />
+      <option name="time" value="179" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -357,47 +349,47 @@
   <component name="debuggerHistoryManager">
     <expressions id="breakpointCondition">
       <expression>
-        <expression-string />
+        <expression-string>currCharPos[1] == -1</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>y == -1</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>start == (0,-1)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>currCharPos[1] = -1</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>start == (0, -1)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>start = (0, -1)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>test = (0,-1)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>goal == (2,12)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>current = 3,13</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -852,8 +844,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/groupNN/testcharacter.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="373">
-          <caret line="542" column="27" lean-forward="true" selection-start-line="542" selection-start-column="27" selection-end-line="542" selection-end-column="27" />
+        <state relative-caret-position="7633">
+          <caret line="449" column="20" selection-start-line="449" selection-start-column="20" selection-end-line="449" selection-end-column="20" />
           <folding>
             <element signature="e#42#52#0" expanded="true" />
           </folding>
