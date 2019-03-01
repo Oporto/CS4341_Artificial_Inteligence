@@ -392,6 +392,7 @@ class TestCharacter1(CharacterEntity):
         self.move(move[0], move[1])
 
 
+
 class TestCharacter2(CharacterEntity):
 
     # constructs a grid that is equivalent to the current world state
