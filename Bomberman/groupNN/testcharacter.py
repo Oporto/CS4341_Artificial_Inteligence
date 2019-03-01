@@ -753,16 +753,21 @@ class TestCharacter2(CharacterEntity):
         # First check if exit is 1 move away
         if len(surroundings[1]) > 0:
             self.move(surroundings[1][0][0], surroundings[1][0][1])
+
         start = me.x, me.y
         goal = self.find_exit(wrld)
         safe_moves = self.get_safe_moves(wrld, surroundings, me)
 
-        path = self.astar(wrld, start, goal)
-        move = self.getMove(path, wrld)
+        if start[0] in range(0, wrld.width()) and goal[0] in range(0, wrld.width()):
+            if start[1] in range(0, wrld.height()) and goal[1] in range(0, wrld.height()):
+                    path = self.astar(wrld, start, goal)
+                    move = self.getMove(path, wrld)
 
         if_bomb_goal = 1, 1
-        if_bomb_path = self.astar(wrld, start, if_bomb_goal)
-        if_bomb_move = self.getMove(if_bomb_path, wrld)
+        if start[0] in range(0, wrld.width()) and if_bomb_goal[0] in range(0, wrld.width()):
+            if start[1] in range(0, wrld.height()) and if_bomb_goal[1] in range(0, wrld.height()):
+                if_bomb_path = self.astar(wrld, start, if_bomb_goal)
+                if_bomb_move = self.getMove(if_bomb_path, wrld)
 
         bomb = False
         for i in range(0, wrld.width()):
