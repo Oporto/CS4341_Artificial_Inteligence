@@ -559,23 +559,49 @@ class TestCharacter(CharacterEntity):
             return -100
         elif wrld.exit_at(x, y):
             print("WIN!!!!!!!")
-            return 200
+            return 300
         elif wrld.explosion_at(x, y):
-            return -100
+            return -200
         elif wrld.bomb_at(x, y):
             return -100
-        if self.killed_monster(wrld):
+        if self.killed_monster(len(self.find_monsters(wrld))):
             return 200
-        if self.destroyed_wall(wrld):
+
+        i = 0
+        j = 0
+        wcount = 0
+        while i < wrld.width():
+            while j < wrld.height():
+                if wrld.wall_at(i, j):
+                    wcount += 1
+                j += 1
+            i += 1
+            j = 0
+
+        if self.destroyed_wall(wcount):
+        # if self.destroyed_wall(wrld):
             return 10
         return 1
 
     def end_calc_reward(self, wrld, x, y):
         if wrld.exit_at(x, y):
             return 100
-        if self.killed_monster(wrld):
+        if self.killed_monster(len(self.find_monsters(wrld))):
             return 200
-        if self.destroyed_wall(wrld):
+
+        i = 0
+        j = 0
+        wcount = 0
+        while i < wrld.width():
+            while j < wrld.height():
+                if wrld.wall_at(i, j):
+                    wcount += 1
+                j += 1
+            i += 1
+            j = 0
+
+        if self.destroyed_wall(wcount):
+        # if self.destroyed_wall(wrld):
             return 10
         else:
             return -100
@@ -767,8 +793,11 @@ class TestCharacter(CharacterEntity):
         goal = self.find_exit(wrld)
         safe_moves = self.get_safe_moves(wrld, surroundings, me)
 
-        #path = self.astar(wrld, start, goal)
-        #move = self.getMove(path, wrld)
+        path = self.astar(wrld, start, goal)
+        move1 = self.getMove(path, wrld)
+
+        if wrld.wall_at(me.x+move1[0], me.y+move1[1]):
+            self.place_bomb()
 
         #if self.monsterNear(wrld, me.x, me.y):
         move = self.qLearn(wrld, me.x, me.y)
@@ -836,7 +865,7 @@ class TestCharacter(CharacterEntity):
         length = len(monsters)
 
         # add value to reward if a monster was killed or wall was destroyed
-        reward = self.end_calc_reward(wrld)
+        reward = self.end_calc_reward(wrld, self.lastxvalue, self.lastyvalue)
         if self.destroyed_wall(count):
             reward += 10
         elif self.killed_monster(length):
