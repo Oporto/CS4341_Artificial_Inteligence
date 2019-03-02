@@ -15,9 +15,10 @@ from testcharacter import TestCharacter
 g = Game.fromfile('map.txt')
 
 # TODO Add your character
-g.add_character(TestCharacter("me", # name
-                              "C",  # avatar
-                              0, 0  # position
+g.add_character(TestCharacter("Quinn", # name
+                              "Q",  # avatar
+                              0, 0, # position
+                              "weight1v1.txt" # filename for the learned weights
 ))
 
 # Run!

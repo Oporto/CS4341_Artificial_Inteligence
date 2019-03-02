@@ -42,6 +42,12 @@ class Node:
 
 class TestCharacter(CharacterEntity):
 
+    def __init__(self, name, avatar, x, y, fname):
+        CharacterEntity.__init__(self,name,avatar,x,y)
+        self.filename = fname
+        self.f = open(self.filename)
+        self.weights = self.f.read().splitlines()
+
     '''_______________________________________________ fields'''
     discount = 0.9
     lrate = 0.2
@@ -58,22 +64,13 @@ class TestCharacter(CharacterEntity):
     monster = 0
     wallCount = 0
 
-    '''_______________________________________________ read from text file'''
-    f = open("weights.txt")
-    weights = f.read().splitlines()
-    print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5], weights[6])
-    print(weights[0], weights[1], weights[2], weights[3], weights[4], weights[5], weights[6])
-    i = 0
-
-    w1 = float(weights[0])
-    w2 = float(weights[1])
-    w3 = float(weights[2])
-    w4 = float(weights[3])
-    w5 = float(weights[4])
-    w6 = float(weights[5])
-    w7 = float(weights[6])
-
-    f.close()
+    w1=0
+    w2=0
+    w3=0
+    w4=0
+    w5=0
+    w6=0
+    w7=0
 
     '''_______________________________________________ functions'''
 # constructs a grid that is equivalent to the current world state
@@ -180,8 +177,6 @@ class TestCharacter(CharacterEntity):
         # First check if exit is 1 move away\
         finds = [Node(-1, -1, -1)]*8
         count = 0
-        danger = 0
-        monsterLoc = self.find_monsters(wrld)
 
         for dx in [-1, 0, 1]:
             x = thisx + dx
@@ -194,15 +189,6 @@ class TestCharacter(CharacterEntity):
                     if (dx != 0) or (dy != 0):
                         # Avoid out-of-bound indexing
                         if (y >= 0) and (y < wrld.height()):
-                            #for pos in monsterLoc:
-                                #coord = pos[0], pos[1]
-                                #currentcoord = wrld.me(self).x, wrld.me(self).y
-                                #dist = abs(self.manhattan_distance(coord, currentcoord))
-                                #if dist <= 4:
-                                #    print("DANGER", dist)
-                                #    danger = True
-                            #if danger:
-                             #   finds[count] = (Node(x, y, 50))
                             if wrld.empty_at(x, y):
                                 finds[count] = (Node(x, y, 1))
                             elif wrld.exit_at(x, y):
@@ -322,7 +308,7 @@ class TestCharacter(CharacterEntity):
             for j in range(-bomb_range, bomb_range+1):
                 if j != 0 and me.y + j in range(0,wrld.height()) and wrld.bomb_at(me.x , me.y + j):
                     safe.remove((dx,dy))
-                    break;
+                    break
         
         #Check cells near monster
         monst_range = 2
@@ -510,6 +496,7 @@ class TestCharacter(CharacterEntity):
     def ft_distance_to_explosion(self, wrld, x, y):
         # find the exit
         explosions = self.find_explosions(wrld)
+        length = 0
 
         # if there are no explosions return 0
         if len(explosions) == 0:
@@ -698,7 +685,6 @@ class TestCharacter(CharacterEntity):
         possibleMoves = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1), (2, 2)]
         bestQValue = -100
         bestQMove = (0,0)
-        monsterPos = self.find_monsters(wrld)
 
         # iterate through all possible moves for character and monster
         for char in possibleMoves:
@@ -744,6 +730,19 @@ class TestCharacter(CharacterEntity):
 
 
     def do(self, wrld):
+
+        '''_______________________________________________ read from text file'''
+        # weights are now static
+        weights = self.weights
+
+        self.w1 = float(weights[0])
+        self.w2 = float(weights[1])
+        self.w3 = float(weights[2])
+        self.w4 = float(weights[3])
+        self.w5 = float(weights[4])
+        self.w6 = float(weights[5])
+        self.w7 = float(weights[6])
+
         me = wrld.me(self)
 
         # if we want to update weights
@@ -779,11 +778,6 @@ class TestCharacter(CharacterEntity):
             difference = self.calc_difference(actualQValue, self.lastQValue)
             self.calc_weights(difference, self.lastft1, self.lastft2, self.lastft3, self.lastft4, self.lastft5, self.lastft6, self.lastft7)
             print("NEW WEIGHTS CALCULATED AT START OF ITERATION reward: ", reward)
-
-        currentQValue = 0
-        newQValue = 0
-        bestQValue = 0
-        bestQMove = (0,0)
 
         surroundings = self.check_surroundings(wrld, me.x, me.y)
          #First check if exit is 1 move away

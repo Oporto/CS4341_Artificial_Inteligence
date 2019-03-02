@@ -29,7 +29,8 @@ g.add_monster(SelfPreservingMonster("aggressive", # name
 # TODO Add your character
 g.add_character(TestCharacter("me", # name
                               "C",  # avatar
-                              0, 0  # position
+                              0, 0,  # position
+                              "weight1v5.txt" # weights file name
 ))
 
 # Run!
